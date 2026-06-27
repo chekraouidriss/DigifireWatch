@@ -1,0 +1,9 @@
+src/environments/environment.prod.ts
+node_modules/
+package-lock.json
+.angular/
+dist/
+*.log
+.DS_Store
+.vscode/
+coverage/

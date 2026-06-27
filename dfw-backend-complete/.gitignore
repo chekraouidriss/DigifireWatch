@@ -1,0 +1,15 @@
+.env
+.env.*
+data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+node_modules/
+package-lock.json
+*.log
+logs/
+.DS_Store
+.vscode/
+dist/
+coverage/
