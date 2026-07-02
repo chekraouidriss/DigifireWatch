@@ -42,7 +42,27 @@ router.get('/users', adminOnly, async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
+router.delete('/clients/:id', adminOnly, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
 
+    // Vérifier si le client est lié à des sites actifs
+    const linkedSite = await dbGet('SELECT id FROM sites WHERE client_id = ? LIMIT 1', [id]);
+    if (linkedSite) {
+      return res.status(400).json({ 
+        message: 'Impossible de supprimer ce client car il possède des sites de maintenance actifs.' 
+      });
+    }
+
+    await dbRun('DELETE FROM user_clients WHERE client_id = ?', [id]);
+    await dbRun('DELETE FROM clients WHERE id = ?', [id]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[admin/clients DELETE error]', err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+});
 // POST /api/admin/users — create a new user account
 router.post('/users', adminOnly, async (req, res) => {
   try {

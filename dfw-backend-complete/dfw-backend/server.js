@@ -40,6 +40,20 @@ app.get('/api/health', (_req, res) => {
     timestamp: Math.floor(Date.now() / 1000),
   });
 });
+//curl -X POST http://localhost:3000/api/test-fire simule TRB events 
+app.post('/api/test-fire', (req, res) => {
+  const mockEvent = {
+    id: Math.floor(Math.random() * 1000),
+    site_id: 1,
+    client_id: 1,
+    type: 'FIRE',
+    raw_data: 'ALARME FEU SIMULÉE — ZONE 001',
+    zone: 'Z001',
+    ts: Math.floor(Date.now() / 1000)
+  };
+  broadcastEvent(mockEvent); // Gha t-sifet direct f l-WebSocket l l-Front!
+  res.json({ ok: true, message: 'Alarme envoyée au WebSocket' });
+});
 
 // ── Routes
 app.use('/api/auth',      authRoutes);
