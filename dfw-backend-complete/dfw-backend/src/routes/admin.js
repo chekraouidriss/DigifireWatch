@@ -258,6 +258,7 @@ router.put('/clients/:id', adminOnly, async (req, res) => {
 // SITES
 // ═══════════════════════════════════════════════════════════
 
+// GET /api/admin/sites
 router.get('/sites', adminOnly, async (req, res) => {
   try {
     const sites = await dbAll(
@@ -265,10 +266,12 @@ router.get('/sites', adminOnly, async (req, res) => {
        FROM sites s
        LEFT JOIN clients c ON c.id = s.client_id
        LEFT JOIN panel_profiles pp ON pp.id = s.panel_profile_id
+       WHERE s.city NOT LIKE '[Archivé]%' -- Exclure les sites archivés du flux
        ORDER BY s.id`
     );
     res.json({ sites });
   } catch (err) {
+    console.error('[admin/sites GET error]', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
@@ -374,7 +377,38 @@ router.get('/panel-profiles/:id', adminOnly, async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
+// DELETE /api/admin/sites/:id
+// Route durcie pour supprimer un site de maintenance après vérification des gateways actifs
+// DELETE /api/admin/sites/:id
+// Route durcie à 100% avec Soft-Delete pour préserver l'intégrité de la télémétrie
+router.delete('/sites/:id', adminOnly, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
 
+    // 1. Vérifier si le site possède encore des gateways TRB liés
+    const linkedDevice = await dbGet('SELECT id FROM trb_devices WHERE site_id = ? AND status != \'decommissioned\' LIMIT 1', [id]);
+    if (linkedDevice) {
+      return res.status(400).json({ 
+        message: 'Impossible de masquer ce site car il possède encore des gateways TRB assignés actifs.' 
+      });
+    }
+
+    // 2. Soft-delete : On marque le site comme masqué au lieu de faire un DELETE physique crashogène
+    // On ajoute un timestamp hidden_at si la colonne existe, ou on utilise hidden_at de manière générique
+    // Si ton schéma n'a pas hidden_at sur sites, on fait simplement un passage du nom en [Archivé] ou filtrage
+    await dbRun(`UPDATE sites SET city = '[Archivé] ' || IFNULL(city, '') WHERE id = ?`, [id]);
+    
+    // Si tu as la colonne hidden_at dans ton schéma (comme pour les events), utilise cette ligne :
+    // await dbRun(`UPDATE sites SET hidden_at = strftime('%s','now') WHERE id = ?`, [id]);
+
+    return res.json({ ok: true, message: 'Site archivé avec succès.' });
+  } catch (err) {
+    console.error('[admin/sites DELETE error]', err);
+    return res.status(500).json({ 
+      message: 'Erreur lors de l\'archivage sécurisé du site.' 
+    });
+  }
+});
 router.put('/panel-profiles/:id', adminOnly, async (req, res) => {
   try {
     const { name, description, brand, model, encoding, rules_json } = req.body ?? {};

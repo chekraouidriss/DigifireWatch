@@ -41,18 +41,30 @@ app.get('/api/health', (_req, res) => {
   });
 });
 //curl -X POST http://localhost:3000/api/test-fire simule TRB events 
-app.post('/api/test-fire', (req, res) => {
-  const mockEvent = {
-    id: Math.floor(Math.random() * 1000),
-    site_id: 1,
-    client_id: 1,
-    type: 'FIRE',
-    raw_data: 'ALARME FEU SIMULÉE — ZONE 001',
-    zone: 'Z001',
-    ts: Math.floor(Date.now() / 1000)
-  };
-  broadcastEvent(mockEvent); // Gha t-sifet direct f l-WebSocket l l-Front!
-  res.json({ ok: true, message: 'Alarme envoyée au WebSocket' });
+// Test endpoint — Simulation complète m9ada b7al l-serveur (Base + WebSocket)
+app.post('/api/test-fire', async (req, res) => {
+  try {
+    const { dbRun, dbGet } = await import('./src/db.js'); // Importation des promesses SQLite
+    const now = Math.floor(Date.now() / 1000);
+
+    // 1. INSERT direct f la base SQLite locale
+    const result = await dbRun(
+      `INSERT INTO events (organization_id, site_id, client_id, trb_device_id, type, raw_data, zone, ts)
+       VALUES (1, 1, 1, 1, 'FIRE', 'ALARME TRB SIMULÉE — ENREGISTRÉE EN BASE', 'Z001', ?)`,
+      [now]
+    );
+
+    // 2. Récupérer l'événement créé avec son ID unique généré par la base
+    const savedEvent = await dbGet('SELECT e.*, s.name AS site_name FROM events e LEFT JOIN sites s ON s.id = e.site_id WHERE e.id = ?', [result.lastID]);
+
+    // 3. Lo7o daba f l-WebSocket l l-Front
+    broadcastEvent(savedEvent);
+
+    res.json({ ok: true, message: 'Alarme enregistrée en base SQLite et envoyée au WebSocket' });
+  } catch (err) {
+    console.error('Erreur simulation base:', err);
+    res.status(500).json({ message: 'Erreur lors de la simulation.' });
+  }
 });
 
 // ── Routes
