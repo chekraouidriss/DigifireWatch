@@ -51,6 +51,7 @@ export const ADMIN_ROUTES: Routes = [
           import('./events/events.component')
             .then(m => m.EventsComponent),
       },
+      { path: 'sites', loadComponent: () => import('./sites/sites.component').then(m => m.SitesComponent) }
     ],
   },
 ];

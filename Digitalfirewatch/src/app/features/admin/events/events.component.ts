@@ -27,7 +27,7 @@ interface SsiEvent {
         </div>
         <div class="status-badge" [class.online]="wsConnected()">
           <span class="pulse-dot"></span>
-          {{ wsConnected() ? 'WebSocket Connecté (Temps Réel)' : 'Connexion suspendue...' }}
+          {{ wsConnected() ? 'WebSocket Connected (Temps Réel)' : 'Connexion suspendue...' }}
         </div>
       </div>
 
@@ -52,6 +52,11 @@ interface SsiEvent {
             <span class="log-site">&#64;{{ ev.site_name || 'Site Inconnu' }}</span>
             <span class="log-data">{{ ev.raw_data }}</span>
             <span class="log-zone" *ngIf="ev.zone">Zone: {{ ev.zone }}</span>
+            
+            <!-- Bouton de suppression visible uniquement pour l'admin -->
+            <button class="btn-delete-log" (click)="deleteEvent(ev.id)" title="Masquer l'événement">
+              🗑️
+            </button>
           </div>
         </div>
       </div>
@@ -190,12 +195,31 @@ interface SsiEvent {
       color: #fff;
     }
 
+    /* Bouton supprimer style mini terminal-icon */
+    .btn-delete-log {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: 0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .log-row:hover .btn-delete-log {
+      opacity: 0.6;
+    }
+    .btn-delete-log:hover {
+      opacity: 1 !important;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
     /* Colors by Event Level */
     .fire .log-badge { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
     .fire { background: rgba(239, 68, 68, 0.05); border-left: 3px solid #ef4444; }
 
     .fault .log-badge { background: #f59e0b; }
-    .fault { background: rgba(f59e0b, 0.05); border-left: 3px solid #f59e0b; }
+    .fault { background: rgba(245, 158, 11, 0.05); border-left: 3px solid #f59e0b; }
 
     .restore .log-badge { background: #10b981; }
     .restore { border-left: 3px solid #10b981; }
@@ -242,7 +266,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     const token = this.auth.getToken();
     if (!token) return;
 
-    // Concaténation de l'URL WS configurée + token JWT
     this.ws = new WebSocket(`${environment.wsUrl}?token=${token}`);
 
     this.ws.onopen = () => {
@@ -254,9 +277,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       try {
         const data = JSON.parse(messageEvent.data);
         
-        // S'il s'agit d'un nouvel événement poussé en temps réel
         if (data.type === 'new_event' && data.event) {
-          // Ajout en haut de la liste (Unshift synchrone via signal)
           this.events.update(current => [data.event, ...current]);
         }
       } catch (err) {
@@ -267,13 +288,27 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.ws.onclose = () => {
       this.wsConnected.set(false);
       console.log('[WS] Déconnecté. Tentative de reconconnexion dans 5s...');
-      // Reconnexion automatique après 5 secondes si coupure réseau
       setTimeout(() => this.connectWebSocket(), 5000);
     };
 
     this.ws.onerror = (error) => {
       console.error('[WS] Erreur détectée:', error);
     };
+  }
+
+  // 🗑️ DELETE synchrone avec le Soft-delete du Backend
+  deleteEvent(id: number): void {
+    if (confirm('Masquer cet événement de la télémétrie ? (L’opération sera enregistrée dans l’audit log)')) {
+      this.http.delete(`${environment.apiUrl}/events/${id}`)
+        .subscribe({
+          next: () => {
+            // Filtrage dynamique immédiat via le signal
+            this.events.update(current => current.filter(e => e.id !== id));
+            console.log(`[CRUD] Event ${id} soft-deleted.`);
+          },
+          error: (err) => console.error('Erreur lors du masquage de l’événement:', err)
+        });
+    }
   }
 
   formatTime(epoch: number): string {

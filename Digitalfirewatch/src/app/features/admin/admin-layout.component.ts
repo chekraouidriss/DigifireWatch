@@ -1,3 +1,4 @@
+// src/app/features/admin/admin-layout.component.ts
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
@@ -40,6 +41,13 @@ import { AuthService } from '../../core/services/auth.service';
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span *ngIf="!collapsed()">Clients</span>
           </a>
+          
+          <!-- 🏢 NOUVEAU: Onglet dynamique pour la gestion des Sites -->
+          <a class="nav-item" routerLink="/admin/sites" routerLinkActive="active" title="Sites de maintenance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M3 7V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M5 21V7m14 14V7M9 11h2m-2 4h2m4-4h2m-2 4h2"/></svg>
+            <span *ngIf="!collapsed()">Sites de maintenance</span>
+          </a>
+
           <a class="nav-item" routerLink="/admin/events" routerLinkActive="active" title="Événements">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             <span *ngIf="!collapsed()">Événements</span>
@@ -103,7 +111,7 @@ import { AuthService } from '../../core/services/auth.service';
     .sidebar-top { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; border-bottom: 1px solid var(--border); gap: 8px; }
     .brand { display: flex; align-items: center; gap: 10px; overflow: hidden; }
     .brand-icon { font-size: 22px; flex-shrink: 0; }
-    .brand-name { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .brand-name { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; }
     .collapse-btn { background: none; border: none; cursor: pointer; color: var(--dim); padding: 4px; border-radius: 6px; flex-shrink: 0; }
     .collapse-btn:hover { color: var(--muted); background: var(--surface2); }
     .collapse-btn svg { width: 18px; height: 18px; }
@@ -152,6 +160,7 @@ export class AdminLayoutComponent {
       '/admin/dashboard': 'Tableau de bord',
       '/admin/gateways':  'Gateways TRB',
       '/admin/clients':   'Clients',
+      '/admin/sites':      'Sites de maintenance', // <-- Titre dynamique injecté nishan
       '/admin/events':    'Événements',
       '/admin/users':     'Utilisateurs',
     };
