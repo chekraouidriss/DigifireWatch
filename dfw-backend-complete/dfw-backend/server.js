@@ -18,6 +18,7 @@ import eventsRoutes    from './src/routes/events.js';
 import sitesRoutes     from './src/routes/sites.js';
 import gatewaysRoutes  from './src/routes/gateways.js';
 import meRoutes        from './src/routes/me.js';
+import technicianRouter from './src/routes/technician.js';
 
 const app  = express();
 const PORT = process.env.PORT ?? 3000;
@@ -75,7 +76,7 @@ app.use('/api/events',    eventsRoutes);
 app.use('/api/sites',     sitesRoutes);
 app.use('/api/gateways',  gatewaysRoutes);
 app.use('/api/me',        meRoutes);
-
+app.use('/api/technician', technicianRouter);
 // ── 404 fallback for unknown API routes
 app.use('/api/*', (_req, res) => {
   res.status(404).json({ message: 'Route non trouvée.' });

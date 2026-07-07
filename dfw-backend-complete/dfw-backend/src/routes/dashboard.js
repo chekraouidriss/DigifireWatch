@@ -1,7 +1,4 @@
 // src/routes/dashboard.js
-// GET /api/dashboard — stats + recent events scoped to the requesting user's clients
-// Mirrors production L.2.a slice
-
 import { Router } from 'express';
 import { dbAll, dbGet } from '../db.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -32,44 +29,56 @@ router.get('/', authenticate, async (req, res) => {
       scopedClientIds = [cid];
     }
 
+    // Fallback si aucun client n'est assigné pour éviter le crash SQL
     if (scopedClientIds.length === 0) {
-      return res.json({ stats: { total: 0, fire: 0, fault: 0, online_gateways: 0 }, recent_events: [], sites: [] });
+      return res.json({ 
+        stats: { total: 0, fire: 0, fault: 0, restore: 0, online_gateways: 0 }, 
+        recent_events: [], 
+        panels: [] 
+      });
     }
 
     const placeholders = scopedClientIds.map(() => '?').join(',');
 
+    // 1. Calcul des KPI globaux depuis la table unifiée `all_gateways_events`
     const stats = await dbGet(
       `SELECT
          COUNT(*)                                          AS total,
          SUM(CASE WHEN type='FIRE'  THEN 1 ELSE 0 END)   AS fire,
          SUM(CASE WHEN type='FAULT' THEN 1 ELSE 0 END)   AS fault,
          SUM(CASE WHEN type='RESTORE' THEN 1 ELSE 0 END) AS restore
-       FROM events
-       WHERE client_id IN (${placeholders}) AND hidden_at IS NULL`,
+       FROM all_gateways_events
+       WHERE (client_id IN (${placeholders}) OR client_id IS NULL) AND hidden_at IS NULL`,
       scopedClientIds
     );
 
+    // 2. Calcul du nombre de modems TRB actifs en ligne
     const onlineGw = await dbGet(
-      `SELECT COUNT(*) AS cnt FROM trb_devices
-       WHERE client_id IN (${placeholders}) AND online_status = 'ONLINE'`,
+      `SELECT COUNT(*) AS cnt FROM trb_devices t
+       LEFT JOIN ecs_panels p ON p.trb_imei = t.imei
+       WHERE (p.client_id IN (${placeholders}) OR p.client_id IS NULL) AND t.online_status = 'ONLINE'`,
       scopedClientIds
     );
 
+    // 3. Extraction des 20 derniers événements télémétriques
     const recentEvents = await dbAll(
-      `SELECT e.*, s.name AS site_name
-       FROM events e
-       LEFT JOIN sites s ON s.id = e.site_id
-       WHERE e.client_id IN (${placeholders}) AND e.hidden_at IS NULL
+      `SELECT e.*, c.company_name AS client_name, p.panel_name
+       FROM all_gateways_events e
+       LEFT JOIN clients c ON c.id = e.client_id
+       LEFT JOIN ecs_panels p ON p.id = e.ecs_panel_id
+       WHERE (e.client_id IN (${placeholders}) OR e.client_id IS NULL) AND e.hidden_at IS NULL
        ORDER BY e.ts DESC LIMIT 20`,
       scopedClientIds
     );
 
-    const sites = await dbAll(
-      `SELECT s.*, t.online_status AS gw_status, t.trb_id
-       FROM sites s
-       LEFT JOIN trb_devices t ON t.site_id = s.id AND t.status = 'claimed'
-       WHERE s.client_id IN (${placeholders})
-       ORDER BY s.id`,
+    // 4. Liste de supervision des Centrales ECS (SSI) exigée par le Front-end
+    const panels = await dbAll(
+      `SELECT p.id, p.panel_name, p.panel_model, p.trb_imei, c.company_name, t.online_status AS gw_status
+       FROM ecs_panels p
+       LEFT JOIN clients c ON c.id = p.client_id
+       LEFT JOIN trb_devices t ON t.imei = p.trb_imei
+       WHERE p.client_id IN (${placeholders})
+       ORDER BY p.id`,
       scopedClientIds
     );
 
@@ -82,12 +91,12 @@ router.get('/', authenticate, async (req, res) => {
         online_gateways: onlineGw?.cnt ?? 0,
       },
       recent_events: recentEvents,
-      sites,
+      panels: panels, // Envoi propre de la structure attendue par l'UI
     });
 
   } catch (err) {
-    console.error('[dashboard]', err);
-    res.status(500).json({ message: 'Erreur serveur.' });
+    console.error('[dashboard fatal crash patch]', err);
+    res.status(500).json({ message: 'Erreur interne du serveur.' });
   }
 });
 

@@ -10,10 +10,10 @@ router.get('/', authenticate, async (req, res) => {
     let devices;
     if (req.user.role === 'admin') {
       devices = await dbAll(
-        `SELECT t.*, c.name AS client_name, s.name AS site_name
+        `SELECT t.*, c.company_name, p.panel_name
          FROM trb_devices t
-         LEFT JOIN clients c ON c.id = t.client_id
-         LEFT JOIN sites s ON s.id = t.site_id
+         LEFT JOIN ecs_panels p ON p.trb_imei = t.imei
+         LEFT JOIN clients c ON c.id = p.client_id
          ORDER BY t.id`
       );
     } else {
@@ -22,11 +22,11 @@ router.get('/', authenticate, async (req, res) => {
       if (!ids.length) return res.json({ devices: [] });
       const ph = ids.map(() => '?').join(',');
       devices = await dbAll(
-        `SELECT t.*, c.name AS client_name, s.name AS site_name
+        `SELECT t.*, c.company_name, p.panel_name
          FROM trb_devices t
-         LEFT JOIN clients c ON c.id = t.client_id
-         LEFT JOIN sites s ON s.id = t.site_id
-         WHERE t.client_id IN (${ph})
+         LEFT JOIN ecs_panels p ON p.trb_imei = t.imei
+         LEFT JOIN clients c ON c.id = p.client_id
+         WHERE p.client_id IN (${ph}) OR p.client_id IS NULL
          ORDER BY t.id`,
         ids
       );
