@@ -4,13 +4,13 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
-interface DashboardSite {
+interface EcsPanel {
   id: number;
-  name: string;
-  city: string | null;
+  panel_name: string;
+  panel_model: string;
+  trb_imei: string | null;
+  company_name: string;
   gw_status: 'ONLINE' | 'STALE' | 'OFFLINE' | null;
-  trb_id: string | null;
-  client_name?: string;
 }
 
 @Component({
@@ -19,32 +19,32 @@ interface DashboardSite {
   imports: [CommonModule],
   template: `
     <div class="space-container">
-      <h2 class="page-title">Mes sites assignés</h2>
+      <h2 class="page-title">Mes centrales ECS assignées</h2>
       <p class="page-sub">Établissements SSI sous votre responsabilité de maintenance</p>
 
       <div class="sites-list">
-        <div class="site-card" *ngFor="let s of sites()">
+        <div class="site-card" *ngFor="let p of panels()">
           <div class="card-left">
-            <div class="building-icon">🏢</div>
+            <div class="building-icon">🔧</div>
             <div class="site-details">
-              <h4 class="site-name">{{ s.name }}</h4>
+              <h4 class="site-name">{{ p.panel_name }} <small class="mono-model">{{ p.panel_model }}</small></h4>
               <p class="site-meta">
-                <span class="client-lbl">{{ s.client_name || 'Client Supervisé' }}</span>
+                <span class="client-lbl">🏢 {{ p.company_name }}</span>
                 <span class="separator">•</span>
-                <span class="trb-lbl mono">{{ s.trb_id || 'Aucune passerelle TRB' }}</span>
+                <span class="trb-lbl mono">IMEI: {{ p.trb_imei || 'Aucune passerelle TRB' }}</span>
               </p>
             </div>
           </div>
           <div class="card-right">
-            <span class="status-chip" [class]="(s.gw_status || 'OFFLINE').toLowerCase()">
+            <span class="status-chip" [class]="(p.gw_status || 'OFFLINE').toLowerCase()">
               <span class="dot"></span>
-              {{ s.trb_id ? s.gw_status : 'NON LIÉE' }}
+              {{ p.trb_imei ? p.gw_status : 'NON LIÉE' }}
             </span>
           </div>
         </div>
 
-        <div class="empty-box" *ngIf="sites().length === 0">
-          Aucun site de maintenance assigné à votre compte pour le moment.
+        <div class="empty-box" *ngIf="panels().length === 0">
+          Aucune centrale de maintenance assignée à votre compte pour le moment.
         </div>
       </div>
     </div>
@@ -61,9 +61,11 @@ interface DashboardSite {
     .card-left { display: flex; align-items: center; gap: 16px; }
     .building-icon { font-size: 24px; }
     .site-name { font-size: 15px; font-weight: 600; color: #e8eaf0; }
+    .mono-model { font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 4px; margin-left: 6px; color: #457b9d; }
     .site-meta { font-size: 12px; color: #8892a4; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .client-lbl { font-weight: 500; }
+    .separator { color: #5a6378; }
     
     .status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
     .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -75,16 +77,15 @@ interface DashboardSite {
   `]
 })
 export class SitesComponent implements OnInit {
-  sites = signal<DashboardSite[]>([]);
+  panels = signal<EcsPanel[]>([]);
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    // 🛠️ Jib les sites filtrés depuis le point d'accès du dashboard du technicien
-    this.http.get<{ sites: DashboardSite[] }>(`${environment.apiUrl}/dashboard`)
+    this.http.get<{ panels: EcsPanel[] }>(`${environment.apiUrl}/technician/panels`)
       .subscribe({
-        next: (res) => this.sites.set(res.sites || []),
-        error: (err) => console.error('Erreur chargement sites technicien:', err)
+        next: (res) => this.panels.set(res.panels || []),
+        error: (err) => console.error(err)
       });
   }
 }

@@ -11,15 +11,13 @@ interface Gateway {
   trb_id: string;
   online_status: 'ONLINE' | 'STALE' | 'OFFLINE';
   status: 'claimed' | 'discovered' | 'decommissioned';
-  client_id: number | null;
-  site_id: number | null;
-  client_name?: string;
-  site_name?: string;
+  company_name?: string; // Mappé depuis le nouveau backend
+  panel_name?: string;   // Mappé depuis le nouveau backend
   last_heartbeat: number | null;
 }
 
-interface Client { id: number; name: string; }
-interface Site { id: number; name: string; client_id: number | null; }
+interface Client { id: number; company_name: string; }
+interface EcsPanel { id: number; panel_name: string; client_id: number; }
 
 @Component({
   selector: 'app-gateways',
@@ -30,16 +28,30 @@ interface Site { id: number; name: string; client_id: number | null; }
       <div class="page-header">
         <div>
           <h2 class="page-title">Gateways TRB</h2>
-          <p class="page-sub">Gérez les identifiants IMEI et associez chaque dispositif à un client et un site</p>
+          <p class="page-sub">Gérez les identifiants IMEI et associez chaque dispositif à une entreprise et une centrale ECS</p>
         </div>
-        <div class="discovered-alert" *ngIf="discovered().length > 0">
+        <div class="discovered-alert" *ngIf="filteredDiscovered().length > 0">
           <span class="pulse-dot"></span>
-          {{ discovered().length }} gateway(s) non assigné(s)
+          {{ filteredDiscovered().length }} gateway(s) non assignée(s)
         </div>
       </div>
 
-      <!-- Section: Gateways découverts — En attente d'assignation -->
-      <div class="card alert-card" *ngIf="discovered().length > 0">
+      <div class="search-container-wrap" style="margin-bottom: 4px; width: 100%;">
+        <div class="search-wrap-input" style="display: flex; align-items: center; gap: 10px; background: #181c27; border: 1px solid #2a3045; border-radius: 12px; padding: 11px 16px; position: relative;">
+          <span class="search-icon-lens" style="font-size: 14px; color: #8892a4;">🔍</span>
+          <input 
+            type="text" 
+            [value]="searchTerm()" 
+            (input)="onSearchChange($event)"
+            placeholder="Rechercher par identifiant TRB, IMEI, entreprise, centrale ECS ou statut..." 
+            class="search-input-field"
+            style="background: transparent; border: none; outline: none; width: 100%; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; padding-right: 24px;"
+          />
+          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()" style="background: transparent; border: none; color: #8892a4; font-size: 18px; cursor: pointer; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); padding: 0; line-height: 1;">×</button>
+        </div>
+      </div>
+
+      <div class="card alert-card" *ngIf="filteredDiscovered().length > 0">
         <div class="card-header">
           <h3 class="card-title">⚠ Gateways découverts — En attente d'assignation</h3>
         </div>
@@ -49,7 +61,7 @@ interface Site { id: number; name: string; client_id: number | null; }
               <th>TRB ID</th><th>IMEI</th><th>Statut réseau</th><th>Dernier contact</th><th>Action</th>
             </tr></thead>
             <tbody>
-              <tr *ngFor="let gw of discovered()">
+              <tr *ngFor="let gw of filteredDiscovered()">
                 <td><span class="mono accent">{{ gw.trb_id || 'Dispositif' }}</span></td>
                 <td><span class="mono dim">{{ gw.imei }}</span></td>
                 <td><span class="status-chip" [class]="gw.online_status.toLowerCase()"><span class="dot"></span>{{ gw.online_status }}</span></td>
@@ -63,23 +75,22 @@ interface Site { id: number; name: string; client_id: number | null; }
         </div>
       </div>
 
-      <!-- Section: Gateways assignés -->
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">Gateways assignés</h3>
-          <span class="badge">{{ claimed().length }}</span>
+          <span class="badge">{{ filteredClaimed().length }}</span>
         </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr>
-              <th>TRB ID</th><th>IMEI</th><th>Client</th><th>Site</th><th>Statut réseau</th><th>Dernier contact</th><th>Actions</th>
+              <th>TRB ID</th><th>IMEI</th><th>Entreprise (Maison Mère)</th><th>Centrale ECS (SSI)</th><th>Statut réseau</th><th>Dernier contact</th><th>Actions</th>
             </tr></thead>
             <tbody>
-              <tr *ngFor="let gw of claimed()">
+              <tr *ngFor="let gw of filteredClaimed()">
                 <td><span class="mono accent">{{ gw.trb_id }}</span></td>
                 <td><span class="mono dim">{{ gw.imei }}</span></td>
-                <td><strong>{{ gw.client_name || 'Non spécifié' }}</strong></td>
-                <td>{{ gw.site_name || 'Non spécifié' }}</td>
+                <td><strong>{{ gw.company_name || 'Non associé' }}</strong></td>
+                <td>{{ gw.panel_name || 'Flux non routé' }}</td>
                 <td><span class="status-chip" [class]="gw.online_status.toLowerCase()"><span class="dot"></span>{{ gw.online_status }}</span></td>
                 <td class="mono muted">{{ formatTimeAgo(gw.last_heartbeat) }}</td>
                 <td>
@@ -87,12 +98,14 @@ interface Site { id: number; name: string; client_id: number | null; }
                   <button class="btn-danger small" (click)="decommission(gw)">Retirer</button>
                 </td>
               </tr>
+              <tr *ngIf="filteredClaimed().length === 0">
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 20px; font-size: 13px;">Aucune gateway assignée ne correspond à votre recherche.</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Modal Formulaire pop-up d'assignation -->
       <div class="modal-backdrop" *ngIf="modalGw()" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
@@ -106,24 +119,24 @@ interface Site { id: number; name: string; client_id: number | null; }
             </div>
             
             <div class="field-group">
-              <label class="field-label">Client *</label>
+              <label class="field-label">Entreprise Client *</label>
               <select class="field-select" [ngModel]="claimClientId()" (ngModelChange)="onClientChange($event)">
-                <option value="">— Sélectionner un client —</option>
-                <option *ngFor="let c of clients()" [value]="c.id">{{ c.name }}</option>
+                <option value="">— Sélectionner une entreprise —</option>
+                <option *ngFor="let c of clients()" [value]="c.id">{{ c.company_name }}</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label class="field-label">Site de maintenance *</label>
-              <select class="field-select" [(ngModel)]="claimSiteId" [disabled]="!claimClientId()">
-                <option value="">— Sélectionner un site —</option>
-                <option *ngFor="let s of filteredSites()" [value]="s.id">{{ s.name }}</option>
+              <label class="field-label">Centrale ECS d'Alarme Cible *</label>
+              <select class="field-select" [(ngModel)]="claimPanelId" [disabled]="!claimClientId() || filteredPanels().length === 0">
+                <option value="">— {{ claimClientId() ? (filteredPanels().length === 0 ? 'Aucune centrale disponible' : 'Sélectionner le panneau') : 'Sélectionner un client d\\'abord' }} —</option>
+                <option *ngFor="let p of filteredPanels()" [value]="p.id">{{ p.panel_name }}</option>
               </select>
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn-ghost" (click)="closeModal()">Annuler</button>
-            <button class="btn-primary" (click)="confirmClaim()" [disabled]="!claimClientId() || !claimSiteId">Confirmer l'assignation</button>
+            <button class="btn-primary" (click)="confirmClaim()" [disabled]="!claimClientId() || !claimPanelId">Confirmer l'appairage</button>
           </div>
         </div>
       </div>
@@ -137,7 +150,7 @@ interface Site { id: number; name: string; client_id: number | null; }
       display: block; font-family: 'Inter', sans-serif;
     }
     .page { display: flex; flex-direction: column; gap: 20px; }
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
     .page-title { font-size: 20px; font-weight: 700; color: var(--text); }
     .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
     .discovered-alert { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; background: rgba(244,162,97,.1); border: 1px solid rgba(244,162,97,.3); color: var(--amber); font-size: 13px; font-weight: 500; }
@@ -185,27 +198,54 @@ interface Site { id: number; name: string; client_id: number | null; }
     .field-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 11px 14px; font-size: 14px; outline: none; cursor: pointer; width: 100%; }
     .field-select:focus { border-color: var(--accent); }
     .field-select:disabled { opacity: 0.5; cursor: not-allowed; }
+    .search-wrap-input:focus-within { border-color: var(--accent) !important; }
+    .btn-clear-search:hover { color: #fff !important; }
   `]
 })
 export class GatewaysComponent implements OnInit {
-  // Signals réactifs de départ
   gateways = signal<Gateway[]>([]);
   clients  = signal<Client[]>([]);
-  sites    = signal<Site[]>([]);
+  panels   = signal<EcsPanel[]>([]);
 
   modalGw       = signal<Gateway | null>(null);
   claimClientId = signal<string>('');
-  claimSiteId   = '';
+  claimPanelId  = '';
 
-  // Computed Signals pour filtrer réactivement
-  filteredSites = computed(() => {
-    const cid = Number(this.claimClientId());
-    if (!cid) return [];
-    return this.sites().filter(s => s.client_id === cid);
+  // ⚡ NOUVEAU: Traitement réactif de recherche
+  searchTerm = signal<string>('');
+
+  // ⚡ NOUVEAU: Computed Signals filtrés à la volée
+  filteredDiscovered = computed(() => {
+    const query = this.searchTerm().trim().toLowerCase();
+    const items = this.gateways().filter(g => g.status === 'discovered');
+    if (!query) return items;
+
+    return items.filter(g => 
+      (g.trb_id || '').toLowerCase().includes(query) || 
+      g.imei.toLowerCase().includes(query) ||
+      g.online_status.toLowerCase().includes(query)
+    );
   });
 
-  discovered = computed(() => this.gateways().filter(g => g.status === 'discovered'));
-  claimed    = computed(() => this.gateways().filter(g => g.status === 'claimed'));
+  filteredClaimed = computed(() => {
+    const query = this.searchTerm().trim().toLowerCase();
+    const items = this.gateways().filter(g => g.status === 'claimed');
+    if (!query) return items;
+
+    return items.filter(g => 
+      g.trb_id.toLowerCase().includes(query) || 
+      g.imei.toLowerCase().includes(query) ||
+      (g.company_name || '').toLowerCase().includes(query) ||
+      (g.panel_name || '').toLowerCase().includes(query) ||
+      g.online_status.toLowerCase().includes(query)
+    );
+  });
+
+  filteredPanels = computed(() => {
+    const cid = Number(this.claimClientId());
+    if (!cid) return [];
+    return this.panels().filter(p => p.client_id === cid);
+  });
 
   constructor(private http: HttpClient) {}
 
@@ -213,36 +253,44 @@ export class GatewaysComponent implements OnInit {
     this.loadData();
   }
 
+  onSearchChange(event: Event): void {
+    const inputVal = (event.target as HTMLInputElement).value;
+    this.searchTerm.set(inputVal);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+  }
+
   loadData(): void {
-    // 🛠️ FIX: /trb-devices bdlna fih d-route l /gateways kima m9ada f routers dyal backend
-    this.http.get<{ devices: Gateway[] }>(`${environment.apiUrl}/gateways`)
+    this.http.get<{ devices: Gateway[] }>(`${environment.apiUrl}/admin/trb-devices`)
       .subscribe({
         next: (res) => this.gateways.set(res.devices || []),
-        error: (err) => console.error('Erreur gateways:', err)
+        error: (err) => console.error(err)
       });
 
     this.http.get<{ clients: Client[] }>(`${environment.apiUrl}/admin/clients`)
       .subscribe({
         next: (res) => this.clients.set(res.clients || []),
-        error: (err) => console.error('Erreur clients:', err)
+        error: (err) => console.error(err)
       });
 
-    this.http.get<{ sites: Site[] }>(`${environment.apiUrl}/admin/sites`)
+    this.http.get<{ panels: EcsPanel[] }>(`${environment.apiUrl}/admin/ecs-panels`)
       .subscribe({
-        next: (res) => this.sites.set(res.sites || []),
-        error: (err) => console.error('Erreur sites:', err)
+        next: (res) => this.panels.set(res.panels || []),
+        error: (err) => console.error(err)
       });
   }
 
   openClaim(gw: Gateway): void {
     this.modalGw.set(gw);
-    this.claimClientId.set(gw.client_id ? String(gw.client_id) : '');
-    this.claimSiteId = gw.site_id ? String(gw.site_id) : '';
+    this.claimClientId.set('');
+    this.claimPanelId = '';
   }
 
   onClientChange(newValue: string): void {
     this.claimClientId.set(newValue);
-    this.claimSiteId = ''; // Clear selectionné du site
+    this.claimPanelId = '';
   }
 
   closeModal(): void {
@@ -251,20 +299,16 @@ export class GatewaysComponent implements OnInit {
 
   confirmClaim(): void {
     const gw = this.modalGw();
-    if (!gw || !this.claimClientId() || !this.claimSiteId) return;
+    if (!gw || !this.claimPanelId) return;
 
-    const payload = {
-      client_id: Number(this.claimClientId()),
-      site_id: Number(this.claimSiteId)
-    };
-
-    this.http.put<{ device: Gateway }>(`${environment.apiUrl}/admin/trb-devices/${gw.id}/assign`, payload)
+    const targetPanelId = Number(this.claimPanelId);
+    this.http.put(`${environment.apiUrl}/admin/ecs-panels/${targetPanelId}/assign-trb`, { trb_imei: gw.imei })
       .subscribe({
         next: () => {
-          this.loadData(); // Rafraîchissement complet
+          this.loadData();
           this.closeModal();
         },
-        error: (err) => console.error('Erreur assignation TRB:', err)
+        error: (err) => console.error('Erreur liaison TRB:', err)
       });
   }
 
@@ -274,7 +318,7 @@ export class GatewaysComponent implements OnInit {
     this.http.put(`${environment.apiUrl}/admin/trb-devices/${gw.id}/decommission`, {})
       .subscribe({
         next: () => this.loadData(),
-        error: (err) => console.error('Erreur décommissionnement:', err)
+        error: (err) => console.error(err)
       });
   }
 

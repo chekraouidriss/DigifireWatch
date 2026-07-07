@@ -1,10 +1,4 @@
 // src/app/features/admin/users/create/create-user.component.ts
-//
-// Accessible only at /admin/users/create — behind authGuard + roleGuard('admin').
-// Uses UserService.createUser() which calls POST /api/admin/users.
-// On success: shows a confirmation banner, resets the form.
-// The admin's own JWT session is NEVER touched.
-
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -20,7 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { UserService, CreateUserPayload } from '../../../../core/services/user.service';
 import { environment } from '../../../../../environments/environment';
 
-interface Client { id: number; name: string; }
+interface Client { id: number; company_name: string; }
 
 @Component({
   selector: 'app-create-user',
@@ -129,7 +123,7 @@ interface Client { id: number; name: string; }
             <div class="client-list" *ngIf="clients().length > 0; else noClients">
               <label class="client-item" *ngFor="let c of clients()">
                 <input type="checkbox" class="client-checkbox" [value]="c.id" (change)="onClientToggle(c.id, $event)" />
-                <span class="client-name">{{ c.name }}</span>
+                <span class="client-name">{{ c.company_name }}</span>
               </label>
             </div>
             <ng-template #noClients>
@@ -190,158 +184,61 @@ interface Client { id: number; name: string; }
       font-family: 'Inter', sans-serif;
       width: 100%;
     }
-
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      max-width: 780px;
-      margin: 0 auto;
-      padding: 16px;
-      position: relative;
-    }
-
-    /* ── Fond avec lueur diffuse subtile ── */
+    .page { display: flex; flex-direction: column; gap: 24px; max-width: 780px; margin: 0 auto; padding: 16px; position: relative; }
     .glow-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
     .glow-circle { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.08; }
     .glow-1 { top: -10%; right: -10%; width: 30vw; height: 30vw; background: radial-gradient(circle, var(--accent) 0%, transparent 80%); }
-
-    /* ── Fil d'Ariane (Breadcrumb) ── */
     .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; z-index: 1; }
     .bc-link { color: var(--muted); text-decoration: none; transition: color .15s; }
     .bc-link:hover { color: var(--text); }
     .bc-sep { color: var(--dim); }
     .bc-current { color: var(--text); font-weight: 500; }
-
-    /* ── Carte premium de formulaire ── */
-    .card {
-      background: rgba(18, 20, 32, 0.65);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-
+    .card { background: rgba(18, 20, 32, 0.65); border: 1px solid var(--border); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); z-index: 1; }
     .card-header { margin-bottom: 28px; }
-    .eyebrow {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-bottom: 6px;
-    }
+    .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 6px; }
     .title { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
     .subtitle { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
-
-    /* ── Bannières d'état ── */
-    .banner {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px; border-radius: 12px;
-      font-size: 13px; margin-bottom: 24px;
-    }
+    .banner { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 24px; }
     .banner svg { width: 16px; height: 16px; flex-shrink: 0; }
     .banner.success { color: var(--green); background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); }
-    .banner.error { color: var(--accent); background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); }
-
-    /* ── Formulaire & Architecture des Inputs ── */
+    .banner.error { color: var(--accent); background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); }
     .form { display: flex; flex-direction: column; gap: 24px; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     @media (max-width: 600px) { .row-2 { grid-template-columns: 1fr; gap: 24px; } }
-
     .field-group { display: flex; flex-direction: column; gap: 8px; }
     .field-label { font-size: 13px; font-weight: 500; color: var(--muted); padding-left: 2px; }
     .optional { font-size: 11px; color: var(--dim); font-weight: 400; }
-
-    .field-wrap {
-      display: flex; align-items: center;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .field-wrap:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
-    }
+    .field-wrap { display: flex; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .field-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12); }
     .field-wrap.field-error { border-color: var(--accent); }
-
-    .field-input, .field-select {
-      width: 100%; padding: 12px 16px;
-      background: transparent; border: none; outline: none;
-      color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif;
-    }
+    .field-input, .field-select { width: 100%; padding: 12px 16px; background: transparent; border: none; outline: none; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; }
     .field-input::placeholder { color: var(--dim); }
     .field-select { cursor: pointer; color: var(--text); }
     .field-select option { background: var(--surface2); color: var(--text); }
-
     .pwd-toggle { background: none; border: none; cursor: pointer; padding: 0 16px; color: var(--dim); }
     .pwd-toggle:hover { color: var(--text); }
     .field-err { font-size: 11.5px; color: var(--accent); padding-left: 2px; margin-top: 2px; }
-
-    /* ── Grille de choix des Rôles ── */
     .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     @media (max-width: 480px) { .role-grid { grid-template-columns: 1fr; } }
-
-    .role-card {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      padding: 16px 12px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 14px;
-      cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      text-align: center;
-    }
+    .role-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; color: var(--text); }
     .role-card:hover { border-color: var(--muted); transform: translateY(-1px); }
-    .role-card.active {
-      border-color: var(--accent);
-      background: rgba(239, 68, 68, 0.08);
-      box-shadow: 0 0 0 1px var(--accent);
-    }
+    .role-card.active { border-color: var(--accent); background: rgba(239, 68, 68, 0.08); box-shadow: 0 0 0 1px var(--accent); }
     .role-icon { font-size: 22px; }
     .role-name { font-size: 13px; font-weight: 600; color: var(--text); }
     .role-desc { font-size: 11px; color: var(--muted); line-height: 1.2; }
-
-    /* ── Liste des clients assignés ── */
     .client-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
-    .client-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 12px;
-      cursor: pointer; transition: border-color .15s;
-    }
+    .client-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: border-color .15s; }
     .client-item:hover { border-color: var(--muted); }
     .client-checkbox { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
     .client-name { font-size: 14px; color: var(--text); font-weight: 500; }
     .hint { font-size: 12px; color: var(--dim); font-style: italic; }
-
-    /* ── Actions de validation de pied de page ── */
-    .form-actions {
-      display: flex; justify-content: flex-end; align-items: center; gap: 16px;
-      padding-top: 16px; border-top: 1px solid var(--border); margin-top: 8px;
-    }
-
-    .btn-primary {
-      padding: 12px 28px; background: var(--accent); color: #fff;
-      border: none; border-radius: 12px; font-size: 14px; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      min-width: 160px; min-height: 46px; transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-    }
+    .form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 8px; }
+    .btn-primary { padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 160px; min-height: 46px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
     .btn-primary:hover:not(:disabled) { background: var(--accent-h); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
-
-    .btn-ghost {
-      padding: 12px 24px; background: transparent; color: var(--muted);
-      border: 1px solid var(--border); border-radius: 12px;
-      font-size: 14px; font-weight: 500; text-decoration: none;
-      display: flex; align-items: center; transition: all .15s; cursor: pointer;
-    }
+    .btn-ghost { padding: 12px 24px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; transition: all .15s; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
-
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
-      border-radius: 50%; animation: spin .65s linear infinite;
-    }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   `],
 })
@@ -365,7 +262,7 @@ export class CreateUserComponent implements OnInit {
     private fb:    FormBuilder,
     private users: UserService,
     private http:  HttpClient,
-    private router: Router,
+    private router: Router, // <-- Injection indispensable pour naviguer
   ) {}
 
   ngOnInit(): void {
@@ -382,10 +279,9 @@ export class CreateUserComponent implements OnInit {
       { validators: this.passwordMatchValidator }
     );
 
-    // Chargement dynamique des clients disponibles
     this.http
       .get<{ clients: Client[] }>(`${environment.apiUrl}/admin/clients`)
-      .subscribe({ next: r => this.clients.set(r.clients), error: () => {} });
+      .subscribe({ next: r => this.clients.set(r.clients || []), error: () => {} });
   }
 
   private passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
@@ -428,22 +324,32 @@ export class CreateUserComponent implements OnInit {
       username,
       password,
       role: role as CreateUserPayload['role'],
-      ...(email            && { email }),
+      ...(email && { email }),
       ...(ssi_access_level && { ssi_access_level }),
-      ...(this.selectedClientIds.size > 0 && {
-        client_ids: [...this.selectedClientIds],
-      }),
+      ...(this.selectedClientIds.size > 0 && { client_ids: [...this.selectedClientIds] }),
     };
 
     this.users.createUser(payload).subscribe({
-      next: (created) => {
+      next: (res: any) => {
         this.loading.set(false);
+        
+        // Résolution de sécurité pour extraire le nom même s'il est wrap dans un objet .user
+        const targetName = res?.user?.name || res?.name || name;
+        
+        // 1. Allumer la banniére verte originale
         this.successMsg.set(
-          `✓ Compte « ${created.name} » (${created.role}) créé avec succès.`
+          `✓ Le compte de « ${targetName} » a été créé avec succès.`
         );
-        this.form.reset({ role: 'technician' });
-        this.selectedClientIds.clear();
+        
+        // Scroll fluide immédiat
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 2. Redirection fluide vers la liste complète après 2 secondes pour laisser le temps de voir le badge vert
+        setTimeout(() => {
+          this.form.reset({ role: 'technician' });
+          this.selectedClientIds.clear();
+          this.router.navigate(['/admin/users']);
+        }, 2200);
       },
       error: (err) => {
         this.loading.set(false);
