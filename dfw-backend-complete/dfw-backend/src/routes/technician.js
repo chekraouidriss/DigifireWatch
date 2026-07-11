@@ -17,18 +17,24 @@ router.get('/panels', authenticate, async (req, res) => {
     let params = [];
 
     if (req.user.role === 'admin') {
-      // L'admin voit tout le parc pour le debug
+      // L'admin voit tout le parc pour le debug (Inclusion de tous les champs SSI)
       sql = `
-        SELECT p.id, p.panel_name, p.panel_model, p.trb_imei, c.company_name, t.online_status AS gw_status
+        SELECT 
+          p.id, p.panel_name, p.panel_model, p.trb_imei, 
+          p.norme, p.has_cmsi, p.has_printer, p.loop_count,
+          c.company_name, t.online_status AS gw_status
         FROM ecs_panels p
         LEFT JOIN clients c ON c.id = p.client_id
         LEFT JOIN trb_devices t ON t.imei = p.trb_imei
         ORDER BY p.id DESC
       `;
     } else {
-      // ⚡ REQUÊTE TECHNIQUE : Filtrer uniquement via les clients liés au technicien f table `user_clients`
+      // ⚡ REQUÊTE TECHNIQUE : Inclusion de tous les champs SSI exigés par l'encadrement
       sql = `
-        SELECT p.id, p.panel_name, p.panel_model, p.trb_imei, c.company_name, t.online_status AS gw_status
+        SELECT 
+          p.id, p.panel_name, p.panel_model, p.trb_imei, 
+          p.norme, p.has_cmsi, p.has_printer, p.loop_count,
+          c.company_name, t.online_status AS gw_status
         FROM ecs_panels p
         INNER JOIN user_clients uc ON uc.client_id = p.client_id
         LEFT JOIN clients c ON c.id = p.client_id

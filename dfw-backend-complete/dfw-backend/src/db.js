@@ -80,10 +80,9 @@ export function dbTransaction(fn) {
 
 export async function runMigrations() {
   try {
-    // Désactiver temporairement pour reconstruire sans conflit
     await dbExec(`PRAGMA foreign_keys = OFF;`);
 
-    // 1. TABLE ORGANIZATIONS (D'origine)
+    // 1. TABLE ORGANIZATIONS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS organizations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,7 +91,7 @@ export async function runMigrations() {
       );
     `);
 
-    // 2. TABLE USERS (D'origine preservée 100%)
+    // 2. TABLE USERS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,7 +107,7 @@ export async function runMigrations() {
       );
     `);
 
-    // 3. TABLE CLIENTS (Refactorisée avec les 3 contacts requis)
+    // 3. TABLE CLIENTS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS clients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,7 +129,7 @@ export async function runMigrations() {
       );
     `);
 
-    // 4. TABLE USER_CLIENTS (D'origine preservée pour la liaison technique d'accès)
+    // 4. TABLE USER_CLIENTS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS user_clients (
         user_id INTEGER NOT NULL,
@@ -141,7 +140,7 @@ export async function runMigrations() {
       );
     `);
 
-    // 5. TABLE ECS_PANELS (Remplace Sites avec le schéma industriel jdid)
+    // 5. TABLE ECS_PANELS (Création + Migration douce)
     await dbExec(`
       CREATE TABLE IF NOT EXISTS ecs_panels (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -158,7 +157,14 @@ export async function runMigrations() {
       );
     `);
 
-    // 6. TABLE TRB_DEVICES (D'origine avec le statut dynamic jdid)
+    // ⚡ INJECTION DES NOUVEAUX CHAMPS SSI EXIGÉS PAR L'ENCADREMENT (Sans perte de données)
+    await dbExec(`ALTER TABLE ecs_panels ADD COLUMN norme TEXT DEFAULT 'NF';`);
+    await dbExec(`ALTER TABLE ecs_panels ADD COLUMN has_cmsi INTEGER DEFAULT 0;`);
+    await dbExec(`ALTER TABLE ecs_panels ADD COLUMN has_printer INTEGER DEFAULT 0;`);
+    await dbExec(`ALTER TABLE ecs_panels ADD COLUMN loop_count INTEGER DEFAULT 1;`);
+    await dbExec(`ALTER TABLE ecs_panels ADD COLUMN equipment_breakdown_json TEXT DEFAULT '{}';`);
+
+    // 6. TABLE TRB_DEVICES
     await dbExec(`
       CREATE TABLE IF NOT EXISTS trb_devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,7 +178,7 @@ export async function runMigrations() {
       );
     `);
 
-    // 7. TABLE ALL_GATEWAYS_EVENTS (La table unifiée de journalisation globale)
+    // 7. TABLE ALL_GATEWAYS_EVENTS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS all_gateways_events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -189,12 +195,12 @@ export async function runMigrations() {
       );
     `);
 
-    // 8. TABLE INTERVENTIONS (D'origine preservée 100% pour l'historique des techniciens)
+    // 8. TABLE INTERVENTIONS
     await dbExec(`
       CREATE TABLE IF NOT EXISTS interventions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         organization_id INTEGER DEFAULT 1,
-        site_id INTEGER, -- Reste nullable ou mappé optionnellement
+        site_id INTEGER,
         ecs_panel_id INTEGER,
         client_id INTEGER,
         technician_id INTEGER,
@@ -210,9 +216,8 @@ export async function runMigrations() {
       );
     `);
 
-    // Réactiver le contrôle d'intégrité
     await dbExec(`PRAGMA foreign_keys = ON;`);
-    console.log('[db] Integration Matrix Restored Successfully ✓');
+    console.log('[db] Integration Matrix Restored & Upgraded with SSI Norms Successfully ✓');
   } catch (err) {
     console.error('[db] Restoration error:', err.message);
   }

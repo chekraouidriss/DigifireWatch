@@ -121,7 +121,8 @@ router.post('/ecs-panels', adminOnly, async (req, res) => {
   try {
     const { 
       client_id, panel_name, panel_model, ref_broudi, 
-      niveau_securite, lignes_detection, resume_installation, location_details 
+      niveau_securite, lignes_detection, resume_installation, location_details,
+      norme, has_cmsi, has_printer, loop_count, equipment_breakdown_json
     } = req.body ?? {};
 
     if (!client_id || !panel_name || !panel_model || !location_details) {
@@ -131,39 +132,77 @@ router.post('/ecs-panels', adminOnly, async (req, res) => {
     const { lastID } = await dbRun(
       `INSERT INTO ecs_panels (
         client_id, panel_name, panel_model, ref_broudi, 
-        niveau_securite, lignes_detection, resume_installation, location_details
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [client_id, panel_name, panel_model, ref_broudi ?? null, 
-       niveau_securite ?? null, lignes_detection ?? null, resume_installation ?? null, location_details]
+        niveau_securite, lignes_detection, resume_installation, location_details,
+        norme, has_cmsi, has_printer, loop_count, equipment_breakdown_json
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        client_id, panel_name, panel_model, ref_broudi ?? null, 
+        niveau_securite ?? null, lignes_detection ?? null, resume_installation ?? null, location_details,
+        norme ?? 'NF', has_cmsi ?? 0, has_printer ?? 0, loop_count ?? 1, 
+        equipment_breakdown_json ?? '{}'
+      ]
     );
 
     const panel = await dbGet('SELECT * FROM ecs_panels WHERE id = ?', [lastID]);
     res.status(201).json({ panel });
   } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur.' });
+    console.error('[Admin ECS Panel Creation Error]', err);
+    res.status(500).json({ message: 'Erreur serveur lors de la création de l\'ECS.' });
   }
 });
 
 router.put('/ecs-panels/:id/assign-trb', adminOnly, async (req, res) => {
   try {
     const panelId = Number(req.params.id);
-    const { trb_imei } = req.body ?? {};
-
-    if (!trb_imei) {
-      return res.status(400).json({ message: "L'IMEI du modem TRB est requis pour l'affectation." });
-    }
+    const { 
+      trb_imei, 
+      resume_installation, 
+      equipment_breakdown_json 
+    } = req.body ?? {};
 
     await dbTransaction(async () => {
-      await dbRun(`UPDATE ecs_panels SET trb_imei = NULL WHERE trb_imei = ?`, [trb_imei]);
-      await dbRun(`UPDATE ecs_panels SET trb_imei = ? WHERE id = ?`, [trb_imei, panelId]);
-      await dbRun(`UPDATE trb_devices SET status = 'claimed' WHERE imei = ?`, [trb_imei]);
+      // 1. ⚡ MISE A JOUR DES COMPOSANTS SSI ET DU RESUME (Toujours exécutée)
+      await dbRun(
+        `UPDATE ecs_panels 
+         SET resume_installation = COALESCE(?, resume_installation),
+             equipment_breakdown_json = COALESCE(?, equipment_breakdown_json)
+         WHERE id = ?`,
+        [
+          resume_installation !== undefined ? resume_installation : null, 
+          equipment_breakdown_json !== undefined ? equipment_breakdown_json : null, 
+          panelId
+        ]
+      );
+
+      // 2. 🛰️ LIAISON DYNAMIQUE DU MODEM TRB (Si l'IMEI est fourni ou modifié)
+      if (trb_imei !== undefined) {
+        if (trb_imei) {
+          // Dissocier l'IMEI de toute ancienne centrale pour éviter les doublons de clés uniques
+          await dbRun(`UPDATE ecs_panels SET trb_imei = NULL WHERE trb_imei = ?`, [trb_imei]);
+          // Assigner le modem à la centrale actuelle
+          await dbRun(`UPDATE ecs_panels SET trb_imei = ? WHERE id = ?`, [trb_imei, panelId]);
+          // Marquer la TRB comme réclamée (claimed)
+          await dbRun(`UPDATE trb_devices SET status = 'claimed' WHERE imei = ?`, [trb_imei]);
+        } else {
+          // Si trb_imei est vide ou null (Dissociation)
+          const currentPanel = await dbGet('SELECT trb_imei FROM ecs_panels WHERE id = ?', [panelId]);
+          if (currentPanel && currentPanel.trb_imei) {
+            await dbRun(`UPDATE trb_devices SET status = 'discovered' WHERE imei = ?`, [currentPanel.trb_imei]);
+          }
+          await dbRun(`UPDATE ecs_panels SET trb_imei = NULL WHERE id = ?`, [panelId]);
+        }
+      }
     });
 
+    // Récupérer l'état final de la centrale pour le renvoyer proprement au Front panel
     const updatedPanel = await dbGet('SELECT * FROM ecs_panels WHERE id = ?', [panelId]);
-    res.json({ success: true, panel: updatedPanel });
+    return res.json({ success: true, panel: updatedPanel });
+
   } catch (err) {
-    console.error('[TRB Hot-Swap Execution Failed]', err);
-    res.status(500).json({ message: "Erreur lors du Hot-Swapping de la TRB.", details: err.message });
+    console.error('[Admin ECS Panels PUT Fatal Error]', err);
+    return res.status(500).json({ 
+      message: `Erreur interne lors de la sauvegarde : ${err.message}` 
+    });
   }
 });
 
