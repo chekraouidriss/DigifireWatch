@@ -31,11 +31,11 @@ interface Client {
     <div class="users-page-container">
       <div class="page-header">
         <div>
-          <h1 class="title">👤 Gestion des Utilisateurs</h1>
-          <p class="subtitle">Créez, gérez, modifiez et révoquez les accès des administrateurs, techniciens et clients</p>
+          <h1 class="title">👤 User Management</h1>
+          <p class="subtitle">Create, manage, modify, and revoke access for administrators, technicians, and clients</p>
         </div>
         <button routerLink="/admin/users/create" class="btn-create">
-          <span class="plus-icon">＋</span> Nouveau compte
+          <span class="plus-icon">＋</span> New account
         </button>
       </div>
 
@@ -46,16 +46,16 @@ interface Client {
             type="text" 
             [value]="searchTerm()" 
             (input)="onSearchChange($event)"
-            placeholder="Rechercher par nom, identifiant, rôle ou entreprise..." 
+            placeholder="Search by name, username, role, or company..." 
             class="search-input-field"
           />
-          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()">×</button>
+          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()">✕</button>
         </div>
       </div>
 
       <div class="users-grid">
         <div class="empty-state" *ngIf="filteredUsers().length === 0">
-          Aucun utilisateur ne correspond à votre recherche.
+          No users match your search criteria.
         </div>
 
         <div class="user-card" *ngFor="let u of filteredUsers()">
@@ -68,11 +68,11 @@ interface Client {
                 <span class="user-display-name">{{ u.name || u.username }}</span>
                 <span class="role-badge" [class]="u.role">{{ u.role }}</span>
               </div>
-              <span class="user-meta">&#64;{{ u.username }} — {{ u.email || 'Pas d\\'email' }}</span>
-              <span class="access-tag" *ngIf="u.ssi_access_level">SSI Niv: {{ u.ssi_access_level }}</span>
+              <span class="user-meta">&#64;{{ u.username }} — {{ u.email || 'No email' }}</span>
+              <span class="access-tag" *ngIf="u.ssi_access_level">SSI Level: {{ u.ssi_access_level }}</span>
               
               <div class="assigned-clients-badges" *ngIf="u.role !== 'admin' && u.client_ids.length > 0">
-                <span class="assigned-title">Entreprises assignées :</span>
+                <span class="assigned-title">Assigned Companies:</span>
                 <div class="badges-wrap">
                   <span class="mini-client-badge" *ngFor="let clientName of getClientNames(u.client_ids)">
                     🏢 {{ clientName }}
@@ -83,7 +83,7 @@ interface Client {
           </div>
 
           <div class="card-actions">
-            <button class="btn-edit-action" (click)="openEditModal(u)" title="Modifier les assignations ou le profil">
+            <button class="btn-edit-action" (click)="openEditModal(u)" title="Modify assignments or profile">
               ✏️
             </button>
 
@@ -91,10 +91,10 @@ interface Client {
               *ngIf="u.id !== currentAdminId" 
               class="btn-delete" 
               (click)="deleteUser(u.id, u.username)" 
-              title="Supprimer le compte">
+              title="Delete account">
               🗑️
             </button>
-            <span *ngIf="u.id === currentAdminId" class="self-badge">Moi</span>
+            <span *ngIf="u.id === currentAdminId" class="self-badge">Me</span>
           </div>
         </div>
       </div>
@@ -102,23 +102,23 @@ interface Client {
       <div class="modal-overlay-edit" *ngIf="isEditModalOpen()">
         <div class="modal-card-edit">
           <div class="modal-header-edit">
-            <h3>Modifier le Compte de &#64;{{ editingUser?.username }}</h3>
-            <button class="btn-close-edit" (click)="closeEditModal()">×</button>
+            <h3>Modify Account for &#64;{{ editingUser?.username }}</h3>
+            <button class="btn-close-edit" (click)="closeEditModal()">✕</button>
           </div>
           
           <div class="form-body-edit">
             <div class="form-group-edit">
-              <label>Nom Complet</label>
+              <label>Full Name</label>
               <input type="text" [(ngModel)]="editFormFields.name" class="input-modal-edit" />
             </div>
             
             <div class="form-group-edit">
-              <label>Adresse E-mail</label>
+              <label>Email Address</label>
               <input type="email" [(ngModel)]="editFormFields.email" class="input-modal-edit" />
             </div>
 
             <div class="form-group-edit" *ngIf="editingUser?.role !== 'admin'">
-              <label class="section-label-edit">Permissions / Entreprises Maison Mère Assignées :</label>
+              <label class="section-label-edit">Permissions / Assigned Parent Companies:</label>
               <div class="client-checkbox-list-edit" *ngIf="clients().length > 0; else noClientsData">
                 <label class="checkbox-item-edit" *ngFor="let c of clients()">
                   <input 
@@ -130,13 +130,13 @@ interface Client {
                   <span class="checkbox-label-text">{{ c.company_name }}</span>
                 </label>
               </div>
-              <ng-template #noClientsData><p class="hint-edit">Aucune entreprise disponible.</p></ng-template>
+              <ng-template #noClientsData><p class="hint-edit">No companies available.</p></ng-template>
             </div>
           </div>
 
           <div class="modal-footer-edit">
-            <button class="btn-secondary-edit" (click)="closeEditModal()">Annuler</button>
-            <button class="btn-submit-edit" (click)="updateUser()">Enregistrer les modifications</button>
+            <button class="btn-secondary-edit" (click)="closeEditModal()">Cancel</button>
+            <button class="btn-submit-edit" (click)="updateUser()">Save Changes</button>
           </div>
         </div>
       </div>
@@ -228,16 +228,13 @@ export class UsersComponent implements OnInit {
   clients = signal<Client[]>([]);
   currentAdminId: number | null = null;
 
-  // Formulaire d'édition local
   isEditModalOpen = signal<boolean>(false);
   editingUser: User | null = null;
   editFormFields = { name: '', email: '' };
   selectedEditClientIds: number[] = [];
 
-  // ⚡ FIXÉ: Recherche réactive basée sur un vrai Signal d'Angular
   searchTerm = signal<string>('');
 
-  // ⚡ Computed Signal connecté au Signal de recherche
   filteredUsers = computed(() => {
     const query = this.searchTerm().trim().toLowerCase();
     if (!query) return this.users();
@@ -266,23 +263,21 @@ export class UsersComponent implements OnInit {
     this.http.get<{ users: User[] }>(`${environment.apiUrl}/admin/users`)
       .subscribe({
         next: (res) => this.users.set(res.users || []),
-        error: (err) => console.error('Erreur chargement utilisateurs:', err)
+        error: (err) => console.error('Error loading users:', err)
       });
 
     this.http.get<{ clients: Client[] }>(`${environment.apiUrl}/admin/clients`)
       .subscribe({
         next: (res) => this.clients.set(res.clients || []),
-        error: (err) => console.error('Erreur chargement clients:', err)
+        error: (err) => console.error('Error loading clients:', err)
       });
   }
 
-  // Capte les changements d'input et hydrate le signal instantanément
   onSearchChange(event: Event): void {
     const inputVal = (event.target as HTMLInputElement).value;
     this.searchTerm.set(inputVal);
   }
 
-  // Vider le filtre et restaurer tous les utilisateurs
   clearSearch(): void {
     this.searchTerm.set('');
   }
@@ -335,19 +330,19 @@ export class UsersComponent implements OnInit {
           this.loadData();
           this.closeEditModal();
         },
-        error: (err) => alert(err.error?.message || 'Erreur lors de la mise à jour.')
+        error: (err) => alert(err.error?.message || 'Error during the update process.')
       });
   }
 
   deleteUser(id: number, username: string): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le compte de @${username} ?`)) {
+    if (confirm(`Are you sure you want to permanently delete the account for @${username}?`)) {
       this.http.delete(`${environment.apiUrl}/admin/users/${id}`)
         .subscribe({
           next: () => {
             this.users.update(current => current.filter(user => user.id !== id));
           },
           error: (err) => {
-            const msg = err.error?.message || 'Impossible de supprimer cet utilisateur.';
+            const msg = err.error?.message || 'Unable to delete this user.';
             alert(msg);
           }
         });

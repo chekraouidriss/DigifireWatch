@@ -16,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
             <span class="brand-icon">🔥</span>
             <span class="brand-name" *ngIf="!collapsed()">DigiFireWatch</span>
           </div>
-          <button class="collapse-btn" (click)="collapsed.set(!collapsed())" title="Réduire">
+          <button class="collapse-btn" (click)="collapsed.set(!collapsed())" title="Collapse">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
@@ -25,29 +25,29 @@ import { AuthService } from '../../core/services/auth.service';
 
         <div class="role-badge" *ngIf="!collapsed()">
           <span class="role-dot"></span>
-          <span>Administrateur</span>
+          <span>Administrator</span>
         </div>
 
         <nav class="nav">
-          <a class="nav-item" routerLink="/admin/dashboard" routerLinkActive="active" title="Tableau de bord">
+          <a class="nav-item" routerLink="/admin/dashboard" routerLinkActive="active" title="Dashboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            <span *ngIf="!collapsed()">Tableau de bord</span>
+            <span *ngIf="!collapsed()">Dashboard</span>
           </a>
           <a class="nav-item" routerLink="/admin/gateways" routerLinkActive="active" title="Gateways TRB">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
-            <span *ngIf="!collapsed()">Gateways TRB</span>
+            <span *ngIf="!collapsed()">TRB Gateways</span>
           </a>
-          <a class="nav-item" routerLink="/admin/clients" routerLinkActive="active" title="Entreprises (Maison Mère)">
+          <a class="nav-item" routerLink="/admin/clients" routerLinkActive="active" title="Companies (Parent Company)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span *ngIf="!collapsed()">Entreprises & ECS</span>
+            <span *ngIf="!collapsed()">Companies & ECS</span>
           </a>
-          <a class="nav-item" routerLink="/admin/events" routerLinkActive="active" title="Événements">
+          <a class="nav-item" routerLink="/admin/events" routerLinkActive="active" title="Events">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            <span *ngIf="!collapsed()">Journal Unifié</span>
+            <span *ngIf="!collapsed()">Unified Log</span>
           </a>
-          <a class="nav-item" routerLink="/admin/users" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }" title="Utilisateurs">
+          <a class="nav-item" routerLink="/admin/users" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }" title="Users">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span *ngIf="!collapsed()">Utilisateurs</span>
+            <span *ngIf="!collapsed()">Users</span>
           </a>
         </nav>
 
@@ -59,12 +59,12 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="user-role">Admin</span>
             </div>
           </div>
-          <button class="logout-btn" (click)="logout()" title="Se déconnecter">
+          <button class="logout-btn" (click)="logout()" title="Sign out">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            <span *ngIf="!collapsed()">Déconnexion</span>
+            <span *ngIf="!collapsed()">Sign Out</span>
           </button>
         </div>
       </aside>
@@ -77,7 +77,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="topbar-right">
             <div class="status-pill online">
               <span class="dot"></span>
-              Système opérationnel
+              System Operational
             </div>
           </div>
         </header>
@@ -101,7 +101,7 @@ import { AuthService } from '../../core/services/auth.service';
     .sidebar-top { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; border-bottom: 1px solid var(--border); gap: 8px; }
     .brand { display: flex; align-items: center; gap: 10px; overflow: hidden; }
     .brand-icon { font-size: 22px; flex-shrink: 0; }
-    .brand-name { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .brand-name { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; text-overflow: ellipsis; }
     .collapse-btn { background: none; border: none; cursor: pointer; color: var(--dim); padding: 4px; border-radius: 6px; }
     .collapse-btn:hover { color: var(--muted); background: var(--surface2); }
     .collapse-btn svg { width: 18px; height: 18px; }
@@ -139,13 +139,13 @@ export class AdminLayoutComponent {
   }
   pageTitle(): string {
     const url = this.router.url;
-    if (url.includes('/admin/users/create')) return 'Créer un compte';
+    if (url.includes('/admin/users/create')) return 'Create User Account';
     const map: Record<string, string> = {
-      '/admin/dashboard': 'Tableau de bord',
-      '/admin/gateways':  'Gateways TRB',
-      '/admin/clients':   'Entreprises & Centrales ECS',
-      '/admin/events':    'Journal des Télémétries Unifiées',
-      '/admin/users':     'Comptes Utilisateurs',
+      '/admin/dashboard': 'Dashboard',
+      '/admin/gateways':  'TRB Gateways',
+      '/admin/clients':   'Companies & ECS Panels',
+      '/admin/events':    'Unified Telemetry Log',
+      '/admin/users':     'User Accounts',
     };
     return Object.entries(map).find(([k]) => url.startsWith(k))?.[1] ?? 'DigiFireWatch';
   }

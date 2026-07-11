@@ -1,3 +1,4 @@
+// src/app/features/technician/technician-layout.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -16,9 +17,10 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
         <div class="role-badge">🔧 Technicien</div>
         <nav class="nav">
+          <!-- ⚡ FIX LIBELLÉ : Devient Centrales assignées (ECS / CMSI) pour le parallélisme -->
           <a class="nav-item" routerLink="/technician/dashboard" routerLinkActive="active">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Mes sites
+            Centrales assignées
           </a>
           <a class="nav-item" routerLink="/technician/interventions" routerLinkActive="active">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -62,6 +64,6 @@ import { AuthService } from '../../core/services/auth.service';
     .topbar-title { font-size:15px; font-weight:600; color:var(--text); }
     .user-name { font-size:13px; color:var(--muted); }
     .content { flex:1; padding:24px; overflow-y:auto; }
-  `],
+  `]
 })
 export class TechnicianLayoutComponent { constructor(public auth: AuthService) {} }

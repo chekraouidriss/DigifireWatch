@@ -22,48 +22,48 @@ interface DashboardPanel {
     <div class="dashboard">
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">Gateways en ligne</div>
+          <div class="kpi-label">Online Gateways</div>
           <div class="kpi-val" style="color: #2a9d8f">{{ stats().online_gateways }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Alarmes Incendie</div>
+          <div class="kpi-label">Fire Alarms</div>
           <div class="kpi-val" style="color: #e63946">{{ stats().fire }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Défauts Techniques</div>
+          <div class="kpi-label">Technical Defects</div>
           <div class="kpi-val" style="color: #f4a261">{{ stats().fault }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Total Événements</div>
+          <div class="kpi-label">Total Events</div>
           <div class="kpi-val" style="color: #e8eaf0">{{ stats().total }}</div>
         </div>
       </div>
 
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Supervision des Centrales par Entreprise</h3>
+          <h3 class="section-title">Company-Wide Panel Monitoring</h3>
         </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Entreprise</th><th>Centrale ECS</th><th>Modem IMEI</th><th>Statut réseau</th><th>Protection</th>
+                <th>Company</th><th>ECS Central Unit</th><th>Modem IMEI</th><th>Network status</th><th>Protection</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of panels()">
                 <td><strong>{{ p.company_name }}</strong></td>
                 <td>{{ p.panel_name }} <small class="mono">{{ p.panel_model }}</small></td>
-                <td><span class="mono accent">{{ p.trb_imei || 'Aucune TRB' }}</span></td>
+                <td><span class="mono accent">{{ p.trb_imei || 'No TRB linked' }}</span></td>
                 <td>
                   <span class="status-chip" [class]="(p.gw_status || 'OFFLINE').toLowerCase()">
                     <span class="dot"></span>{{ p.gw_status || 'OFFLINE' }}
                   </span>
                 </td>
-                <td><span class="mono small">{{ p.trb_imei ? 'Protégé 100%' : 'Vulnérable 0%' }}</span></td>
+                <td><span class="mono small">{{ p.trb_imei ? '100% Protected' : '0% Vulnerable' }}</span></td>
               </tr>
               <tr *ngIf="panels().length === 0">
-                <td colspan="5" style="text-align: center; color: var(--dim);">Aucune centrale détectée en base.</td>
+                <td colspan="5" style="text-align: center; color: var(--dim);">No central unit detected in the database.</td>
               </tr>
             </tbody>
           </table>
@@ -71,16 +71,16 @@ interface DashboardPanel {
       </div>
 
       <div class="section">
-        <div class="section-header"><h3 class="section-title">Flux Télémétrie Temps Réel</h3></div>
+        <div class="section-header"><h3 class="section-title">Real-Time Telemetry Stream</h3></div>
         <div class="events-list">
           <div class="event-row" *ngFor="let e of recentEvents()" [class]="e.type.toLowerCase()">
             <span class="event-type-badge" [class]="e.type.toLowerCase()">{{ e.type }}</span>
-            <span class="event-client mono">&#64;{{ e.client_name || 'Rogue' }} ➔ ({{ e.panel_name || 'Flux non routé' }})</span>
+            <span class="event-client mono">&#64;{{ e.client_name || 'Rogue' }} ➔ ({{ e.panel_name || 'Unrouted stream' }})</span>
             <span class="event-msg">{{ e.raw_data }}</span>
             <span class="event-time mono muted">{{ formatTime(e.ts) }}</span>
           </div>
           <div class="event-row" *ngIf="recentEvents().length === 0" style="justify-content: center;">
-            <span style="color: var(--dim);">Aucun signal stocké pour le moment.</span>
+            <span style="color: var(--dim);">No signal stored at the moment.</span>
           </div>
         </div>
       </div>
@@ -129,11 +129,11 @@ export class AdminDashboardComponent implements OnInit {
         this.recentEvents.set(res.recent_events || []);
         this.panels.set(res.panels || []);
       },
-      error: (err) => console.error('Erreur dashboard dynamic loading:', err)
+      error: (err) => console.error('Error loading dynamic dashboard:', err)
     });
   }
 
   formatTime(epoch: number): string {
-    return new Date(epoch * 1000).toLocaleTimeString('fr-FR');
+    return new Date(epoch * 1000).toLocaleTimeString('en-US');
   }
 }

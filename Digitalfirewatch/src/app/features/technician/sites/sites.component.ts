@@ -19,8 +19,8 @@ interface EcsPanel {
   imports: [CommonModule],
   template: `
     <div class="space-container">
-      <h2 class="page-title">Mes centrales ECS assignées</h2>
-      <p class="page-sub">Établissements SSI sous votre responsabilité de maintenance</p>
+      <h2 class="page-title">My Assigned ECS Panels</h2>
+      <p class="page-sub">SSI Facilities under your maintenance scope</p>
 
       <div class="sites-list">
         <div class="site-card" *ngFor="let p of panels()">
@@ -31,20 +31,20 @@ interface EcsPanel {
               <p class="site-meta">
                 <span class="client-lbl">🏢 {{ p.company_name }}</span>
                 <span class="separator">•</span>
-                <span class="trb-lbl mono">IMEI: {{ p.trb_imei || 'Aucune passerelle TRB' }}</span>
+                <span class="trb-lbl mono">IMEI: {{ p.trb_imei || 'No TRB Gateway linked' }}</span>
               </p>
             </div>
           </div>
           <div class="card-right">
             <span class="status-chip" [class]="(p.gw_status || 'OFFLINE').toLowerCase()">
               <span class="dot"></span>
-              {{ p.trb_imei ? p.gw_status : 'NON LIÉE' }}
+              {{ p.trb_imei ? p.gw_status : 'UNLINKED' }}
             </span>
           </div>
         </div>
 
         <div class="empty-box" *ngIf="panels().length === 0">
-          Aucune centrale de maintenance assignée à votre compte pour le moment.
+          No maintenance central units are currently assigned to your account.
         </div>
       </div>
     </div>

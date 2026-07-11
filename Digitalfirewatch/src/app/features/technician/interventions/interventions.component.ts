@@ -26,65 +26,65 @@ interface InterventionReport {
     <div class="space-container no-print">
       <div class="page-header">
         <div>
-          <h2 class="page-title">Rapports d'Interventions</h2>
-          <p class="page-sub">Enregistrez vos fiches de maintenance SSI et générez le livrable PDF</p>
+          <h2 class="page-title">Intervention Reports</h2>
+          <p class="page-sub">Fill out your SSI maintenance logs and generate the PDF deliverable</p>
         </div>
       </div>
 
       <div class="main-grid">
         <div class="card form-card">
-          <h3 class="card-title">📝 Nouvelle Fiche d'Intervention</h3>
+          <h3 class="card-title">📝 New Intervention Log</h3>
           <form (ngSubmit)="submitReport()" #reportForm="ngForm">
             <div class="form-group">
-              <label>Centrale ECS ciblée *</label>
+              <label>Target ECS Panel *</label>
               <select [(ngModel)]="report.panel_id" name="panel_id" required class="field-select" (change)="onPanelChange()">
-                <option value="">— Sélectionner l'équipement —</option>
+                <option value="">— Select Equipment —</option>
                 <option *ngFor="let p of panels()" [value]="p.id">🏢 {{ p.company_name }} ➔ {{ p.panel_name }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Nom du Technicien *</label>
+              <label>Technician Name *</label>
               <input type="text" [(ngModel)]="report.technician_name" name="technician_name" required class="field-input">
             </div>
 
             <div class="form-group">
-              <label>Type d'opération *</label>
+              <label>Operation Type *</label>
               <select [(ngModel)]="report.type" name="type" required class="field-select">
-                <option value="Maintenance Préventive">Maintenance Préventive</option>
-                <option value="Dépannage Curatif (Panne TRB)">Dépannage Curatif (Panne TRB)</option>
-                <option value="Audit Réglementaire SSI">Audit Réglementaire SSI</option>
+                <option value="Preventive Maintenance">Preventive Maintenance</option>
+                <option value="Corrective Troubleshooting (TRB Issue)">Corrective Troubleshooting (TRB Issue)</option>
+                <option value="Regulatory SSI Audit">Regulatory SSI Audit</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Observations & Comptes-rendus techniques *</label>
-              <textarea [(ngModel)]="report.observations" name="observations" required class="field-textarea" rows="4" placeholder="Décrivez l'état de la centrale, niveau de batterie, tests de détection effectués..."></textarea>
+              <label>Observations & Technical Remarks *</label>
+              <textarea [(ngModel)]="report.observations" name="observations" required class="field-textarea" rows="4" placeholder="Describe the panel status, battery levels, verification tests performed..."></textarea>
             </div>
 
-            <button type="submit" class="btn-primary" [disabled]="!reportForm.form.valid">Visualiser & Exporter</button>
+            <button type="submit" class="btn-primary" [disabled]="!reportForm.form.valid">Preview & Export</button>
           </form>
         </div>
 
         <div class="card preview-card" *ngIf="submittedReport()">
-          <h3 class="card-title">📄 Aperçu du Livrable</h3>
+          <h3 class="card-title">📄 Deliverable Preview</h3>
           <div class="document-preview">
             <div class="preview-header">
               <strong>DigiFireWatch SSI Report</strong>
-              <span class="badge">Statut: {{ submittedReport()?.status }}</span>
+              <span class="badge">Status: {{ submittedReport()?.status }}</span>
             </div>
             <hr class="divider">
-            <p><strong>Entreprise :</strong> {{ submittedReport()?.company_name }}</p>
-            <p><strong>Équipement ECS :</strong> {{ submittedReport()?.panel_name }}</p>
-            <p><strong>Date :</strong> {{ submittedReport()?.date }}</p>
-            <p><strong>Opérateur :</strong> {{ submittedReport()?.technician_name }}</p>
-            <p><strong>Type :</strong> {{ submittedReport()?.type }}</p>
+            <p><strong>Company:</strong> {{ submittedReport()?.company_name }}</p>
+            <p><strong>ECS Panel:</strong> {{ submittedReport()?.panel_name }}</p>
+            <p><strong>Date:</strong> {{ submittedReport()?.date }}</p>
+            <p><strong>Operator:</strong> {{ submittedReport()?.technician_name }}</p>
+            <p><strong>Type:</strong> {{ submittedReport()?.type }}</p>
             <div class="preview-obs">
-              <strong>Rapport de maintenance :</strong>
+              <strong>Maintenance Log Summary:</strong>
               <p>{{ submittedReport()?.observations }}</p>
             </div>
           </div>
-          <button class="btn-secondary" (click)="printPDF()">📥 Télécharger / Imprimer le PDF</button>
+          <button class="btn-secondary" (click)="printPDF()">📥 Download / Print PDF</button>
         </div>
       </div>
     </div>
@@ -92,43 +92,43 @@ interface InterventionReport {
     <div class="print-only document-pdf" *ngIf="submittedReport()">
       <div class="pdf-header">
         <div>
-          <h1>RAPPORT D'INTERVENTION TECHNIQUE</h1>
-          <p class="brand-slug">DigiFireWatch • Système de Sécurité Incendie (SSI)</p>
+          <h1>TECHNICAL INTERVENTION REPORT</h1>
+          <p class="brand-slug">DigiFireWatch • Fire Safety System (SSI)</p>
         </div>
         <div class="pdf-logo">🔥</div>
       </div>
       
       <table class="pdf-meta-table">
         <tr>
-          <td><strong>Client / Entreprise :</strong></td>
+          <td><strong>Client / Company:</strong></td>
           <td>{{ submittedReport()?.company_name }}</td>
-          <td><strong>Date d'exécution :</strong></td>
+          <td><strong>Execution Date:</strong></td>
           <td>{{ submittedReport()?.date }}</td>
         </tr>
         <tr>
-          <td><strong>Centrale ECS :</strong></td>
+          <td><strong>ECS Panel:</strong></td>
           <td>{{ submittedReport()?.panel_name }}</td>
-          <td><strong>Type d'intervention :</strong></td>
+          <td><strong>Intervention Type:</strong></td>
           <td>{{ submittedReport()?.type }}</td>
         </tr>
         <tr>
-          <td><strong>Technicien Référent :</strong></td>
+          <td><strong>Assigned Technician:</strong></td>
           <td colspan="3">{{ submittedReport()?.technician_name }}</td>
         </tr>
       </table>
 
       <div class="pdf-content-box">
-        <h3>COMPTE-RENDU TECHNIQUE & OBSERVATIONS :</h3>
+        <h3>TECHNICAL REMARKS & OBSERVATIONS:</h3>
         <p class="obs-text">{{ submittedReport()?.observations }}</p>
       </div>
 
       <div class="pdf-footer-signatures">
         <div class="sig-box">
-          <p>Signature Technicien</p>
+          <p>Technician Signature</p>
           <div class="line"></div>
         </div>
         <div class="sig-box">
-          <p>Visa Direction / Admin</p>
+          <p>Management / Admin Sign-off</p>
           <div class="line"></div>
         </div>
       </div>
@@ -180,19 +180,17 @@ export class InterventionsComponent implements OnInit {
   report: InterventionReport = {
     panel_id: '',
     technician_name: '',
-    type: 'Maintenance Préventive',
+    type: 'Preventive Maintenance',
     observations: '',
-    status: 'submitted',
+    status: 'Submitted',
     date: ''
   };
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit(): void {
-    // Remplir le nom par défaut du technicien connecté depuis la session d'auth
-    this.report.technician_name = this.auth.user()?.name || 'Technicien Référent';
+    this.report.technician_name = this.auth.user()?.name || 'Assigned Technician';
     
-    // Récupérer le périmètre de centrales exact assigné pour remplir le select
     this.http.get<{ panels: EcsPanel[] }>(`${environment.apiUrl}/technician/panels`)
       .subscribe(res => this.panels.set(res.panels || []));
   }
@@ -206,7 +204,7 @@ export class InterventionsComponent implements OnInit {
   }
 
   submitReport(): void {
-    this.report.date = new Date().toLocaleDateString('fr-FR', {
+    this.report.date = new Date().toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
     

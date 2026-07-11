@@ -1,3 +1,4 @@
+// src/app/features/auth/login/login.component.ts
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -26,14 +27,14 @@ import { AuthService } from '../../../core/services/auth.service';
               <span class="fire-icon">🔥</span>
               <span class="brand-name">DigiFireWatch</span>
             </div>
-            <h1 class="login-title">Accès Sécurisé</h1>
-            <p class="login-sub">Système de Supervision & Maintenance SSI</p>
+            <h1 class="login-title">Secure Access</h1>
+            <p class="login-sub">SSI Supervision & Maintenance System</p>
           </div>
 
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
 
             <div class="field-group">
-              <label class="field-label" for="username">Identifiant</label>
+              <label class="field-label" for="username">Username</label>
               <div class="field-wrap" [class.field-error]="isError('username')">
                 <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -47,11 +48,11 @@ import { AuthService } from '../../../core/services/auth.service';
                   autocomplete="username"
                 />
               </div>
-              <span class="field-err-msg" *ngIf="isError('username')">Identifiant requis</span>
+              <span class="field-err-msg" *ngIf="isError('username')">Username is required</span>
             </div>
 
             <div class="field-group">
-              <label class="field-label" for="password">Mot de passe</label>
+              <label class="field-label" for="password">Password</label>
               <div class="field-wrap" [class.field-error]="isError('password')">
                 <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -75,7 +76,7 @@ import { AuthService } from '../../../core/services/auth.service';
                   </svg>
                 </button>
               </div>
-              <span class="field-err-msg" *ngIf="isError('password')">Mot de passe requis</span>
+              <span class="field-err-msg" *ngIf="isError('password')">Password is required</span>
             </div>
 
             <div class="server-error" *ngIf="serverError()">
@@ -86,14 +87,14 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <button type="submit" class="submit-btn" [class.loading]="loading()">
-              <span *ngIf="!loading()">Se connecter</span>
+              <span *ngIf="!loading()">Sign In</span>
               <span *ngIf="loading()" class="spinner"></span>
             </button>
 
           </form>
 
           <div class="login-footer">
-            <span class="footer-note">Accès restreint. Contactez votre administrateur pour obtenir un compte.</span>
+            <span class="footer-note">Restricted access. Please contact your system administrator to request an account.</span>
           </div>
 
         </div>
@@ -226,7 +227,7 @@ export class LoginComponent {
       next: () => { this.loading.set(false); this.auth.navigateToDashboard(); },
       error: (err) => {
         this.loading.set(false);
-        this.serverError.set(err.error?.message ?? 'Identifiant ou mot de passe incorrect.');
+        this.serverError.set(err.error?.message ?? 'Incorrect username or password.');
       },
     });
   }

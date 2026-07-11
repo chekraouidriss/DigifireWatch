@@ -28,11 +28,11 @@ interface EcsPanel { id: number; panel_name: string; client_id: number; }
       <div class="page-header">
         <div>
           <h2 class="page-title">Gateways TRB</h2>
-          <p class="page-sub">Gérez les identifiants IMEI et associez chaque dispositif à une entreprise et une centrale ECS</p>
+          <p class="page-sub">Manage IMEI identifiers and associate each device with a company and an ECS central unit</p>
         </div>
         <div class="discovered-alert" *ngIf="filteredDiscovered().length > 0">
           <span class="pulse-dot"></span>
-          {{ filteredDiscovered().length }} gateway(s) non assignée(s)
+          {{ filteredDiscovered().length }} unassigned gateway(s)
         </div>
       </div>
 
@@ -43,31 +43,31 @@ interface EcsPanel { id: number; panel_name: string; client_id: number; }
             type="text" 
             [value]="searchTerm()" 
             (input)="onSearchChange($event)"
-            placeholder="Rechercher par identifiant TRB, IMEI, entreprise, centrale ECS ou statut..." 
+            placeholder="Search by TRB ID, IMEI, company, ECS panel or status..." 
             class="search-input-field"
             style="background: transparent; border: none; outline: none; width: 100%; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; padding-right: 24px;"
           />
-          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()" style="background: transparent; border: none; color: #8892a4; font-size: 18px; cursor: pointer; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); padding: 0; line-height: 1;">×</button>
+          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()" style="background: transparent; border: none; color: #8892a4; font-size: 18px; cursor: pointer; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); padding: 0; line-height: 1;">✕</button>
         </div>
       </div>
 
       <div class="card alert-card" *ngIf="filteredDiscovered().length > 0">
         <div class="card-header">
-          <h3 class="card-title">⚠ Gateways découverts — En attente d'assignation</h3>
+          <h3 class="card-title">⚠ Discovered Gateways — Awaiting Assignment</h3>
         </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr>
-              <th>TRB ID</th><th>IMEI</th><th>Statut réseau</th><th>Dernier contact</th><th>Action</th>
+              <th>TRB ID</th><th>IMEI</th><th>Network status</th><th>Last contact</th><th>Action</th>
             </tr></thead>
             <tbody>
               <tr *ngFor="let gw of filteredDiscovered()">
-                <td><span class="mono accent">{{ gw.trb_id || 'Dispositif' }}</span></td>
+                <td><span class="mono accent">{{ gw.trb_id || 'Device' }}</span></td>
                 <td><span class="mono dim">{{ gw.imei }}</span></td>
                 <td><span class="status-chip" [class]="gw.online_status.toLowerCase()"><span class="dot"></span>{{ gw.online_status }}</span></td>
                 <td class="mono muted">{{ formatTimeAgo(gw.last_heartbeat) }}</td>
                 <td>
-                  <button class="btn-primary small" (click)="openClaim(gw)">+ Assigner</button>
+                  <button class="btn-primary small" (click)="openClaim(gw)">+ Assign</button>
                 </td>
               </tr>
             </tbody>
@@ -77,29 +77,29 @@ interface EcsPanel { id: number; panel_name: string; client_id: number; }
 
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">Gateways assignés</h3>
+          <h3 class="card-title">Assigned Gateways</h3>
           <span class="badge">{{ filteredClaimed().length }}</span>
         </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr>
-              <th>TRB ID</th><th>IMEI</th><th>Entreprise (Maison Mère)</th><th>Centrale ECS (SSI)</th><th>Statut réseau</th><th>Dernier contact</th><th>Actions</th>
+              <th>TRB ID</th><th>IMEI</th><th>Company (Parent Company)</th><th>ECS Central (SSI)</th><th>Network status</th><th>Last contact</th><th>Actions</th>
             </tr></thead>
             <tbody>
               <tr *ngFor="let gw of filteredClaimed()">
                 <td><span class="mono accent">{{ gw.trb_id }}</span></td>
                 <td><span class="mono dim">{{ gw.imei }}</span></td>
-                <td><strong>{{ gw.company_name || 'Non associé' }}</strong></td>
-                <td>{{ gw.panel_name || 'Flux non routé' }}</td>
+                <td><strong>{{ gw.company_name || 'Unassociated' }}</strong></td>
+                <td>{{ gw.panel_name || 'Unrouted stream' }}</td>
                 <td><span class="status-chip" [class]="gw.online_status.toLowerCase()"><span class="dot"></span>{{ gw.online_status }}</span></td>
                 <td class="mono muted">{{ formatTimeAgo(gw.last_heartbeat) }}</td>
                 <td>
-                  <button class="btn-ghost small" (click)="openClaim(gw)">Modifier</button>
-                  <button class="btn-danger small" (click)="decommission(gw)">Retirer</button>
+                  <button class="btn-ghost small" (click)="openClaim(gw)">Modify</button>
+                  <button class="btn-danger small" (click)="decommission(gw)">Remove</button>
                 </td>
               </tr>
               <tr *ngIf="filteredClaimed().length === 0">
-                <td colspan="7" style="text-align: center; color: var(--muted); padding: 20px; font-size: 13px;">Aucune gateway assignée ne correspond à votre recherche.</td>
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 20px; font-size: 13px;">No assigned gateway matches your search.</td>
               </tr>
             </tbody>
           </table>
@@ -109,7 +109,7 @@ interface EcsPanel { id: number; panel_name: string; client_id: number; }
       <div class="modal-backdrop" *ngIf="modalGw()" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3>Assigner {{ modalGw()?.trb_id || 'TRB' }}</h3>
+            <h3>Assign {{ modalGw()?.trb_id || 'TRB' }}</h3>
             <button class="modal-close" (click)="closeModal()">✕</button>
           </div>
           <div class="modal-body">
@@ -119,24 +119,24 @@ interface EcsPanel { id: number; panel_name: string; client_id: number; }
             </div>
             
             <div class="field-group">
-              <label class="field-label">Entreprise Client *</label>
+              <label class="field-label">Client Company *</label>
               <select class="field-select" [ngModel]="claimClientId()" (ngModelChange)="onClientChange($event)">
-                <option value="">— Sélectionner une entreprise —</option>
+                <option value="">— Select a company —</option>
                 <option *ngFor="let c of clients()" [value]="c.id">{{ c.company_name }}</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label class="field-label">Centrale ECS d'Alarme Cible *</label>
+              <label class="field-label">Target Alarm ECS Panel *</label>
               <select class="field-select" [(ngModel)]="claimPanelId" [disabled]="!claimClientId() || filteredPanels().length === 0">
-                <option value="">— {{ claimClientId() ? (filteredPanels().length === 0 ? 'Aucune centrale disponible' : 'Sélectionner le panneau') : 'Sélectionner un client d\\'abord' }} —</option>
+                <option value="">— {{ claimClientId() ? (filteredPanels().length === 0 ? 'No panel available' : 'Select the panel') : 'Select a client first' }} —</option>
                 <option *ngFor="let p of filteredPanels()" [value]="p.id">{{ p.panel_name }}</option>
               </select>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn-ghost" (click)="closeModal()">Annuler</button>
-            <button class="btn-primary" (click)="confirmClaim()" [disabled]="!claimClientId() || !claimPanelId">Confirmer l'appairage</button>
+            <button class="btn-ghost" (click)="closeModal()">Cancel</button>
+            <button class="btn-primary" (click)="confirmClaim()" [disabled]="!claimClientId() || !claimPanelId">Confirm Pairing</button>
           </div>
         </div>
       </div>
@@ -211,10 +211,8 @@ export class GatewaysComponent implements OnInit {
   claimClientId = signal<string>('');
   claimPanelId  = '';
 
-  // ⚡ NOUVEAU: Traitement réactif de recherche
   searchTerm = signal<string>('');
 
-  // ⚡ NOUVEAU: Computed Signals filtrés à la volée
   filteredDiscovered = computed(() => {
     const query = this.searchTerm().trim().toLowerCase();
     const items = this.gateways().filter(g => g.status === 'discovered');
@@ -308,12 +306,12 @@ export class GatewaysComponent implements OnInit {
           this.loadData();
           this.closeModal();
         },
-        error: (err) => console.error('Erreur liaison TRB:', err)
+        error: (err) => console.error('Error linking TRB:', err)
       });
   }
 
   decommission(gw: Gateway): void {
-    if (!confirm(`Voulez-vous vraiment retirer et décommissionner définitivement la gateway ${gw.trb_id} ?`)) return;
+    if (!confirm(`Are you sure you want to permanently remove and decommission gateway ${gw.trb_id}?`)) return;
     
     this.http.put(`${environment.apiUrl}/admin/trb-devices/${gw.id}/decommission`, {})
       .subscribe({
@@ -323,15 +321,15 @@ export class GatewaysComponent implements OnInit {
   }
 
   formatTimeAgo(epoch: number | null): string {
-    if (!epoch) return 'Aucun contact';
+    if (!epoch) return 'No contact';
     const now = Math.floor(Date.now() / 1000);
     const diff = now - epoch;
 
-    if (diff < 60) return `Il y a ${diff}s`;
+    if (diff < 60) return `${diff}s ago`;
     const mins = Math.floor(diff / 60);
-    if (mins < 60) return `Il y a ${mins}min`;
+    if (mins < 60) return `${mins} min ago`;
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `Il y a ${hours}h`;
-    return new Date(epoch * 1000).toLocaleDateString('fr-FR');
+    if (hours < 24) return `${hours}h ago`;
+    return new Date(epoch * 1000).toLocaleDateString('en-US');
   }
 }

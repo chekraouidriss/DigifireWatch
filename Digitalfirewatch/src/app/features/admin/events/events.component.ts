@@ -2,7 +2,7 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms'; // <-- Importation indispensable pour la barre de recherche
+import { FormsModule } from '@angular/forms'; // <-- Indispensable for search input binding
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -15,23 +15,23 @@ interface SsiEvent {
   panel_name?: string;  // Nom de la centrale ECS (SSI)
   type: string;         // FIRE, RESTORE, FAULT
   raw_data: string;     // Texte brut du panneau
-  ts: number;           // Epoch timestamp d'origine
+  ts: number;           // Original Epoch timestamp
 }
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule], // <-- Ajout de FormsModule ici
+  imports: [CommonModule, FormsModule], // <-- Added FormsModule here
   template: `
     <div class="events-page">
       <div class="events-header">
         <div>
-          <h1 class="title">📡 Flux de Télémétrie Live</h1>
-          <p class="subtitle">Historique et journalisation centralisée des événements (Table Unifiée)</p>
+          <h1 class="title">📡 Live Telemetry Stream</h1>
+          <p class="subtitle">Centralized history and logging of system events (Unified Table)</p>
         </div>
         <div class="status-badge" [class.online]="wsConnected()">
           <span class="pulse-dot"></span>
-          {{ wsConnected() ? 'WebSocket Connected (Temps Réel)' : 'Connexion suspendue...' }}
+          {{ wsConnected() ? 'WebSocket Connected (Real-Time)' : 'Connection suspended...' }}
         </div>
       </div>
 
@@ -42,10 +42,10 @@ interface SsiEvent {
             type="text" 
             [value]="searchTerm()" 
             (input)="onSearchChange($event)"
-            placeholder="Filtrer par type (FIRE, FAULT), entreprise, centrale, message brut ou IMEI..." 
+            placeholder="Filter by type (FIRE, FAULT), company, central unit, raw message or IMEI..." 
             class="search-input-field"
           />
-          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()">×</button>
+          <button *ngIf="searchTerm()" class="btn-clear-search" (click)="clearSearch()">✕</button>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ interface SsiEvent {
 
         <div class="terminal-body">
           <div class="empty-state" *ngIf="filteredEvents().length === 0">
-            {{ searchTerm() ? 'Aucun événement ne correspond à votre recherche.' : 'Aucun événement reçu pour le moment. En attente du flux des passerelles TRB...' }}
+            {{ searchTerm() ? 'No event matches your search criteria.' : 'No events received yet. Awaiting live data streams from TRB gateways...' }}
           </div>
 
           <div class="log-row" *ngFor="let ev of filteredEvents()" [ngClass]="ev.type.toLowerCase()">
@@ -69,15 +69,15 @@ interface SsiEvent {
             <span class="log-badge">{{ ev.type }}</span>
             
             <span class="log-site">
-              &#64;{{ ev.client_name || 'Rogue / Non Associé' }} 
+              &#64;{{ ev.client_name || 'Rogue / Unassociated' }} 
               <span class="routing-arrow">➔</span> 
-              ({{ ev.panel_name || 'Flux Non Routé' }})
+              ({{ ev.panel_name || 'Unrouted Stream' }})
             </span>
             
             <span class="log-data">{{ ev.raw_data }}</span>
             <span class="log-zone">IMEI: {{ ev.trb_imei }}</span>
             
-            <button class="btn-delete-log" (click)="deleteEvent(ev.id)" title="Masquer l'événement de l'audit log">
+            <button class="btn-delete-log" (click)="deleteEvent(ev.id)" title="Hide event from safety audit log">
               🗑️
             </button>
           </div>
@@ -140,18 +140,16 @@ export class EventsComponent implements OnInit, OnDestroy {
   events = signal<SsiEvent[]>([]);
   wsConnected = signal<boolean>(false);
 
-  // ⚡ NOUVEAU: Signal réactif de filtrage live
   searchTerm = signal<string>('');
 
-  // ⚡ NOUVEAU: Computed Signal ultra-rapide connecté au flux
   filteredEvents = computed(() => {
     const query = this.searchTerm().trim().toLowerCase();
     if (!query) return this.events();
 
     return this.events().filter(ev => {
       const matchType   = ev.type.toLowerCase().includes(query);
-      const matchClient = (ev.client_name || 'rogue / non associé').toLowerCase().includes(query);
-      const matchPanel  = (ev.panel_name  || 'flux non routé').toLowerCase().includes(query);
+      const matchClient = (ev.client_name || 'rogue / unassociated').toLowerCase().includes(query);
+      const matchPanel  = (ev.panel_name  || 'unrouted stream').toLowerCase().includes(query);
       const matchRaw    = ev.raw_data.toLowerCase().includes(query);
       const matchImei   = ev.trb_imei.toLowerCase().includes(query);
 
@@ -170,13 +168,11 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (this.ws) this.ws.close();
   }
 
-  // Hydrater le signal à chaque frappe clavier
   onSearchChange(event: Event): void {
     const inputVal = (event.target as HTMLInputElement).value;
     this.searchTerm.set(inputVal);
   }
 
-  // Vider le filtre instantanément
   clearSearch(): void {
     this.searchTerm.set('');
   }
@@ -185,7 +181,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.http.get<{ events: SsiEvent[] }>(`${environment.apiUrl}/events?limit=100`)
       .subscribe({
         next: (res) => this.events.set(res.events || []),
-        error: (err) => console.error('Erreur historique logs unifiés:', err)
+        error: (err) => console.error('Error loading unified history logs:', err)
       });
   }
 
@@ -197,7 +193,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     this.ws.onopen = () => {
       this.wsConnected.set(true);
-      console.log('[WS] Connecté au journal unifié DigiFireWatch');
+      console.log('[WS] Connected to DigiFireWatch unified event logger');
     };
 
     this.ws.onmessage = (messageEvent) => {
@@ -207,7 +203,7 @@ export class EventsComponent implements OnInit, OnDestroy {
           this.events.update(current => [data.event, ...current]);
         }
       } catch (err) {
-        console.error('Erreur parsing log WS:', err);
+        console.error('Error parsing live WS payload:', err);
       }
     };
 
@@ -216,24 +212,24 @@ export class EventsComponent implements OnInit, OnDestroy {
       setTimeout(() => this.connectWebSocket(), 5000);
     };
 
-    this.ws.onerror = (error) => console.error('[WS] Erreur Télémétrie:', error);
+    this.ws.onerror = (error) => console.error('[WS] Telemetry transmission exception:', error);
   }
 
   deleteEvent(id: number): void {
-    if (confirm('Masquer cet événement du journal de sécurité ? (L’opération sera enregistrée dans l’audit log)')) {
+    if (confirm('Are you sure you want to hide this event from the security logs? (This action will be tracked in the audit log)')) {
       this.http.delete(`${environment.apiUrl}/events/${id}`)
         .subscribe({
           next: () => {
             this.events.update(current => current.filter(e => e.id !== id));
-            console.log(`[Journal] Record ${id} soft-deleted safely.`);
+            console.log(`[Logger] Record ${id} soft-deleted safely.`);
           },
-          error: (err) => console.error('Erreur lors du masquage de l’événement:', err)
+          error: (err) => console.error('Error masking security event:', err)
         });
     }
   }
 
   formatTime(epoch: number): string {
     const date = new Date(epoch * 1000);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 }

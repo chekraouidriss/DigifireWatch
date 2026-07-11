@@ -27,17 +27,17 @@ interface Client { id: number; company_name: string; }
       </div>
 
       <nav class="breadcrumb">
-        <a routerLink="/admin/users" class="bc-link">Utilisateurs</a>
+        <a routerLink="/admin/users" class="bc-link">Users</a>
         <span class="bc-sep">›</span>
-        <span class="bc-current">Nouveau compte</span>
+        <span class="bc-current">New Account</span>
       </nav>
 
       <div class="card">
         <div class="card-header">
           <div class="eyebrow">Administration</div>
-          <h1 class="title">Créer un compte utilisateur</h1>
+          <h1 class="title">Create a User Account</h1>
           <p class="subtitle">
-            Ce formulaire est réservé aux administrateurs. Le compte créé sera immédiatement opérationnel sur la plateforme DigiFireWatch.
+            This form is restricted to administrators. The created account will be immediately operational on the DigiFireWatch platform.
           </p>
         </div>
 
@@ -62,25 +62,25 @@ interface Client { id: number; company_name: string; }
           
           <div class="row-2">
             <div class="field-group">
-              <label class="field-label" for="name">Nom complet</label>
+              <label class="field-label" for="name">Full Name</label>
               <div class="field-wrap" [class.field-error]="isErr('name')">
                 <input id="name" type="text" class="field-input" formControlName="name" placeholder="Yassin Alami" />
               </div>
-              <span class="field-err" *ngIf="isErr('name')">Nom complet requis</span>
+              <span class="field-err" *ngIf="isErr('name')">Full name is required</span>
             </div>
             
             <div class="field-group">
-              <label class="field-label" for="username">Identifiant de connexion</label>
+              <label class="field-label" for="username">Login Username</label>
               <div class="field-wrap" [class.field-error]="isErr('username')">
                 <input id="username" type="text" class="field-input" formControlName="username" placeholder="yassin.alami" autocomplete="off" />
               </div>
-              <span class="field-err" *ngIf="isErr('username')">Identifiant requis</span>
+              <span class="field-err" *ngIf="isErr('username')">Username is required</span>
             </div>
           </div>
 
           <div class="field-group">
             <label class="field-label" for="email">
-              Adresse e-mail <span class="optional">(facultatif)</span>
+              Email Address <span class="optional">(optional)</span>
             </label>
             <div class="field-wrap">
               <input id="email" type="email" class="field-input" formControlName="email" placeholder="yassin@example.com" />
@@ -88,7 +88,7 @@ interface Client { id: number; company_name: string; }
           </div>
 
           <div class="field-group">
-            <label class="field-label">Rôle d'accès</label>
+            <label class="field-label">Access Role</label>
             <div class="role-grid">
               <button type="button" class="role-card"
                       *ngFor="let r of roles"
@@ -103,22 +103,22 @@ interface Client { id: number; company_name: string; }
 
           <div class="field-group" *ngIf="form.get('role')?.value === 'technician'">
             <label class="field-label" for="ssi_level">
-              Niveau d'accès SSI <span class="optional">(NF S 61-931)</span>
+              SSI Access Level <span class="optional">(NF S 61-931)</span>
             </label>
             <div class="field-wrap">
               <select id="ssi_level" class="field-select" formControlName="ssi_access_level">
-                <option value="">— Sélectionner le niveau —</option>
-                <option value="I">Niveau I — Exploitant</option>
-                <option value="II">Niveau II — Maintenance courante</option>
-                <option value="III">Niveau III — Maintenance spécialisée</option>
-                <option value="IV">Niveau IV — Constructeur / installateur</option>
+                <option value="">— Select access level —</option>
+                <option value="I">Level I — Operator</option>
+                <option value="II">Level II — Routine Maintenance</option>
+                <option value="III">Level III — Specialized Maintenance</option>
+                <option value="IV">Level IV — Manufacturer / Installer</option>
               </select>
             </div>
           </div>
 
           <div class="field-group" *ngIf="form.get('role')?.value && form.get('role')?.value !== 'admin'">
             <label class="field-label">
-              Clients assignés <span class="optional">(facultatif)</span>
+              Assigned Clients <span class="optional">(optional)</span>
             </label>
             <div class="client-list" *ngIf="clients().length > 0; else noClients">
               <label class="client-item" *ngFor="let c of clients()">
@@ -127,39 +127,39 @@ interface Client { id: number; company_name: string; }
               </label>
             </div>
             <ng-template #noClients>
-              <p class="hint">Aucun client disponible dans la base de données.</p>
+              <p class="hint">No clients available in the database.</p>
             </ng-template>
           </div>
 
           <div class="row-2">
             <div class="field-group">
-              <label class="field-label" for="password">Mot de passe</label>
+              <label class="field-label" for="password">Password</label>
               <div class="field-wrap" [class.field-error]="isErr('password')">
-                <input id="password" [type]="showPwd() ? 'text' : 'password'" class="field-input" formControlName="password" placeholder="Min. 8 caractères" autocomplete="new-password" />
+                <input id="password" [type]="showPwd() ? 'text' : 'password'" class="field-input" formControlName="password" placeholder="Min. 8 characters" autocomplete="new-password" />
                 <button type="button" class="pwd-toggle" (click)="showPwd.set(!showPwd())">
                   {{ showPwd() ? '🙈' : '👁️' }}
                 </button>
               </div>
               <span class="field-err" *ngIf="isErr('password')">
-                {{ form.get('password')?.errors?.['minlength'] ? 'Minimum 8 caractères' : 'Mot de passe requis' }}
+                {{ form.get('password')?.errors?.['minlength'] ? 'Minimum 8 characters required' : 'Password is required' }}
               </span>
             </div>
             
             <div class="field-group">
-              <label class="field-label" for="confirm">Confirmer le mot de passe</label>
+              <label class="field-label" for="confirm">Confirm Password</label>
               <div class="field-wrap" [class.field-error]="isErr('confirm')">
                 <input id="confirm" type="password" class="field-input" formControlName="confirm" placeholder="••••••••" autocomplete="new-password" />
               </div>
               <span class="field-err" *ngIf="isErr('confirm')">
-                {{ form.errors?.['mismatch'] ? 'Les mots de passe ne correspondent pas' : 'Confirmation requise' }}
+                {{ form.errors?.['mismatch'] ? 'Passwords do not match' : 'Confirmation is required' }}
               </span>
             </div>
           </div>
 
           <div class="form-actions">
-            <a routerLink="/admin/users" class="btn-ghost">Annuler</a>
+            <a routerLink="/admin/users" class="btn-ghost">Cancel</a>
             <button type="submit" class="btn-primary" [class.is-loading]="loading()" [disabled]="loading()">
-              <span *ngIf="!loading()">Créer le compte</span>
+              <span *ngIf="!loading()">Create Account</span>
               <span *ngIf="loading()" class="spinner"></span>
             </button>
           </div>
@@ -189,7 +189,7 @@ interface Client { id: number; company_name: string; }
     .glow-circle { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.08; }
     .glow-1 { top: -10%; right: -10%; width: 30vw; height: 30vw; background: radial-gradient(circle, var(--accent) 0%, transparent 80%); }
     .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; z-index: 1; }
-    .bc-link { color: var(--muted); text-decoration: none; transition: color .15s; }
+    .bc-link { var(--muted); text-decoration: none; transition: color .15s; }
     .bc-link:hover { color: var(--text); }
     .bc-sep { color: var(--dim); }
     .bc-current { color: var(--text); font-weight: 500; }
@@ -251,9 +251,9 @@ export class CreateUserComponent implements OnInit {
   clients     = signal<Client[]>([]);
 
   roles = [
-    { value: 'admin',      icon: '🛡️',  label: 'Admin',      desc: 'Accès complet' },
-    { value: 'technician', icon: '🔧',  label: 'Technicien', desc: 'Sites assignés' },
-    { value: 'client',     icon: '👤',  label: 'Client',     desc: 'Vue lecture'   },
+    { value: 'admin',      icon: '🛡️',  label: 'Admin',      desc: 'Full access' },
+    { value: 'technician', icon: '🔧',  label: 'Technician', desc: 'Assigned sites' },
+    { value: 'client',     icon: '👤',  label: 'Client',     desc: 'Read-only view'   },
   ];
 
   private selectedClientIds: Set<number> = new Set();
@@ -262,7 +262,7 @@ export class CreateUserComponent implements OnInit {
     private fb:    FormBuilder,
     private users: UserService,
     private http:  HttpClient,
-    private router: Router, // <-- Injection indispensable pour naviguer
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -333,18 +333,14 @@ export class CreateUserComponent implements OnInit {
       next: (res: any) => {
         this.loading.set(false);
         
-        // Résolution de sécurité pour extraire le nom même s'il est wrap dans un objet .user
         const targetName = res?.user?.name || res?.name || name;
         
-        // 1. Allumer la banniére verte originale
         this.successMsg.set(
-          `✓ Le compte de « ${targetName} » a été créé avec succès.`
+          `✓ The account for "${targetName}" has been successfully created.`
         );
         
-        // Scroll fluide immédiat
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // 2. Redirection fluide vers la liste complète après 2 secondes pour laisser le temps de voir le badge vert
         setTimeout(() => {
           this.form.reset({ role: 'technician' });
           this.selectedClientIds.clear();
@@ -354,7 +350,7 @@ export class CreateUserComponent implements OnInit {
       error: (err) => {
         this.loading.set(false);
         this.serverError.set(
-          err.error?.message ?? 'Erreur lors de la création du compte.'
+          err.error?.message ?? 'An error occurred while creating the account.'
         );
       },
     });
