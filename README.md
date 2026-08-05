@@ -108,22 +108,6 @@ npm start
 
 ---
 
-## 📁 Project Structure
-
-```
-DigiFireWatch/
-├── scripts/
-│   └── seed.js          # DB migrations & seeding
-├── src/
-│   ├── routes/           # Express REST routes
-│   ├── mqtt/              # MQTT broker client & handlers
-│   ├── ws/                # WebSocket server
-│   └── middleware/        # Auth, RBAC, validation
-├── .env.example
-├── package.json
-└── README.md
-```
-
 ---
 
 ## 👤 Author
@@ -132,10 +116,7 @@ DigiFireWatch/
 Cybersecurity Engineering Student @ ENSA Agadir
 
 - 🐙 GitHub: [@chekraouidriss](https://github.com/chekraouidriss)
-- 💼 LinkedIn: [Driss Chekraoui](https://www.linkedin.com/in/driss-chekraoui)
+- 💼 LinkedIn: [Driss Chekraoui](https://www.linkedin.com/in/driss-chekraoui-02701025b/)
 
 ---
 
-## 📜 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
